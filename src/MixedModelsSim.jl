@@ -1,5 +1,5 @@
 module MixedModelsSim
+export makelevels
 
-greet() = print("Hello World!")
-
+include("utilities.jl")
 end # module
