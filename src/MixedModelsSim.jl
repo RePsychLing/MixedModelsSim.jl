@@ -1,10 +1,12 @@
 module MixedModelsSim
 
-using MixedModels, PooledArrays, Tables
+using DataFrames, MixedModels, PooledArrays, Tables
 
 export
-    makelevels,
-    simulate!
+    itemsubjdf,
+    nlevels,
+    crossedDataFrame
 
-include("utilities.jl")
+include("columntable.jl")
+
 end # module
