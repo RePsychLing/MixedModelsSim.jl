@@ -1,8 +1,10 @@
 module MixedModelsSim
 
-using PooledArrays
+using MixedModels, PooledArrays, Tables
 
-export makelevels
+export
+    makelevels,
+    simulate!
 
 include("utilities.jl")
 end # module
