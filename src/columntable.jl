@@ -1,11 +1,31 @@
+```@meta
+DocTestSetup = quote
+    using MixedModelsSim
+end
+```
+
 """
     crossedDataFrame(namedtup)
 
 Return a `DataFrame` obtained by crossing factors given in `namedtup`.
 
 `namedtup` should be a named tuple of vectors of strings giving the levels.
-```@example
-crossedDataFrame((prec=["break","maintain"], load=["yes","no"]))
+# Example
+```jldoctest
+julia> crossedDataFrame((prec=["break","maintain"], load=["yes","no"], spkr=["new","old"]))
+8×3 DataFrames.DataFrame
+│ Row │ prec     │ load   │ spkr   │
+│     │ String   │ String │ String │
+├─────┼──────────┼────────┼────────┤
+│ 1   │ break    │ yes    │ new    │
+│ 2   │ maintain │ yes    │ new    │
+│ 3   │ break    │ no     │ new    │
+│ 4   │ maintain │ no     │ new    │
+│ 5   │ break    │ yes    │ old    │
+│ 6   │ maintain │ yes    │ old    │
+│ 7   │ break    │ no     │ old    │
+│ 8   │ maintain │ no     │ old    │
+
 ```
 """
 function crossedDataFrame(namedtup)
@@ -51,9 +71,12 @@ end
 """
     nlevels(nlev, tag='S')
 
-Return a `Vector{String}` of `tag` followed by `1:nlev` padded with zeros
-```@example
-show(nlevels(10))
+Return a `Vector{String}` of `tag` followed by `1:nlev` left-padded with zeros
+
+# Examples
+```julia
+julia> show(nlevels(10))
+["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10"]
 ```
 """
 nlevels(nlev, tag='S') = string.(tag, lpad.(1:nlev, ndigits(nlev), '0'))
