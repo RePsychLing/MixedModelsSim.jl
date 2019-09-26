@@ -1,11 +1,13 @@
 module MixedModelsSim
 
-using DataFrames, MixedModels, PooledArrays, Tables
+using DataFrames, PooledArrays, Tables
 
 export
+    crossedDataFrame,
+    cyclicshift,
     itemsubjdf,
     nlevels,
-    crossedDataFrame
+    withinitem
 
 include("columntable.jl")
 
