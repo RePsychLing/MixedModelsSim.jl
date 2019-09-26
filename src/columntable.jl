@@ -11,7 +11,7 @@ Return a `DataFrame` obtained by crossing factors given in `namedtup`.
 
 `namedtup` should be a named tuple of vectors of strings giving the levels.
 # Example
-```jldoctest
+```julia-repl
 julia> crossedDataFrame((prec=["break","maintain"], load=["yes","no"], spkr=["new","old"]))
 8×3 DataFrames.DataFrame
 │ Row │ prec     │ load   │ spkr   │
@@ -74,7 +74,7 @@ end
 Return a `Vector{String}` of `tag` followed by `1:nlev` left-padded with zeros
 
 # Examples
-```julia
+```julia-repl
 julia> show(nlevels(10))
 ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10"]
 ```
