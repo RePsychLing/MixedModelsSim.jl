@@ -38,7 +38,14 @@ function itemsubjdf(nitem, nsubj, expfactors=())
         if !iszero(r)
             throw(ArgumentError("number of rows, $nrow, is not a multiple of number of conditions, $ncond"))
         end
-        df = hcat(df, repeat(exptbl, q))
+                    # create a latin square design in the conditions by cyclical shifts
+        v = collect(1:ncond)
+        inds = typeof(v)[]
+        for _ in 1:q
+            append!(inds, v)
+            cyclicshift!(v)
+        end
+        df = hcat(df, exptbl[inds,!])
     end
     df
 end
