@@ -1,6 +1,6 @@
 # MixedModelsSim
 
-[![Repostatus WIP](https://www.repostatus.org/badge/#wip)](https://www.repostatus.org/#wip)
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://RePsychLing.github.io/MixedModelsSim.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://RePsychLing.github.io/MixedModelsSim.jl/dev)
 [![Build Status](https://travis-ci.org/RePsychLing/MixedModelsSim.jl.svg?branch=master)](https://travis-ci.com/RePsychLing/MixedModelsSim.jl)
