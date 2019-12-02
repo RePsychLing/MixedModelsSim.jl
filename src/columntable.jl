@@ -86,12 +86,11 @@ nlevels(nlev, tag='S') = string.(tag, lpad.(1:nlev, ndigits(nlev), '0'))
 
 Return a `DataFrame` of `item` with `nitem` levels and balanced columns of conditions from `df`
 """
-function withinitem(nitem, df)
+function withinitem(nitem, df; tag = 'I')
     nrow = size(df, 1)
     q, r = divrem(nitem, nrow)
     iszero(r) || throw(ArgumentError("nitem = $nitem is not a multiple of nrow = $nrow"))
     value = df[vec(cyclicshift(1:nrow, nitem)), :]
-    value.item = repeat(PooledArray(string.('I', lpad.(string.(1:nitem), ndigits(nitem), '0'))),
-        outer=nrow)
+    value.item = repeat(PooledArray(nlevels(nitem, tag=tag)), outer=nrow)
     value
 end
