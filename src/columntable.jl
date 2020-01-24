@@ -1,18 +1,22 @@
 ```@meta
 DocTestSetup = quote
-    using MixedModelsSim
+    using DataFrames, MixedModelsSim, Tables
 end
 ```
 
 """
-    crossedDataFrame(namedtup)
+    crossedfactors(namedtup)
 
-Return a `DataFrame` obtained by crossing factors given in `namedtup`.
+Return a `Vector{NamedTuple}` obtained by crossing factors generated from `namedtup`.
 
 `namedtup` should be a named tuple of vectors of strings giving the levels.
+
+The value is a `Tables.RowTable` and hence can be converted to a `DataFrame`.
+
 # Example
 ```julia-repl
-julia> crossedDataFrame((prec=["break","maintain"], load=["yes","no"], spkr=["new","old"]))
+julia> levs = (prec=["break","maintain"], load=["Y","N"], spkr=["new","old"]);
+julia> crossedfactors(levs) |> DataFrame
 8×3 DataFrames.DataFrame
 │ Row │ prec     │ load   │ spkr   │
 │     │ String   │ String │ String │
@@ -28,14 +32,9 @@ julia> crossedDataFrame((prec=["break","maintain"], load=["yes","no"], spkr=["ne
 
 ```
 """
-function crossedDataFrame(namedtup)
+function crossedfactors(namedtup)
     nms = keys(namedtup)
-    rowtbl = NamedTuple{nms, NTuple{length(namedtup), String}}[]
-    for pr in Iterators.product(values(namedtup)...)
-        push!(rowtbl, NamedTuple{nms}(pr))
-    end
-    ctbl = Tables.columntable(rowtbl)
-    DataFrame(NamedTuple{keys(ctbl)}(PooledArray.(values(ctbl))))
+    vec([NamedTuple{nms}(s) for s in Iterators.product(values(namedtup)...)])
 end
 
 """
@@ -80,6 +79,20 @@ julia> show(nlevels(10))
 ```
 """
 nlevels(nlev, tag='S') = string.(tag, lpad.(1:nlev, ndigits(nlev), '0'))
+
+"""
+    pooled!(df::DataFrame, cols::Type=Union{AbstractString,Missing})
+
+Like `DataFrames.categorical!` but converting columns to `PooledArray`s
+"""
+function pooled!(df::DataFrame, cols::Type=Union{AbstractString,Missing})
+    for (n,v) in eachcol(df, true)
+        if eltype(v) <: cols
+            df[!, n] = PooledArray(v)
+        end
+    end
+    df
+end
 
 """
     withinitem(nitem, df)

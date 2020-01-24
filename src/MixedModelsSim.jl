@@ -3,10 +3,11 @@ module MixedModelsSim
 using DataFrames, PooledArrays, Tables
 
 export
-    crossedDataFrame,
+    crossedfactors,
     cyclicshift,
     itemsubjdf,
     nlevels,
+    pooled!,
     withinitem
 
 include("columntable.jl")
