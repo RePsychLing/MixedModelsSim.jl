@@ -3,8 +3,8 @@ module MixedModelsSim
 using DataFrames, PooledArrays, Tables
 
 export
-    crossedfactors,
     cyclicshift,
+    factorproduct,
     itemsubjdf,
     nlevels,
     pooled!,

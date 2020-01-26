@@ -5,37 +5,39 @@ end
 ```
 
 """
-    crossedfactors(namedtup)
+    factorproduct(facs...)
 
-Return a `Vector{NamedTuple}` obtained by crossing factors generated from `namedtup`.
+Return a `Vector{NamedTuple}` obtained by crossing `facs...`.
 
-`namedtup` should be a named tuple of vectors of strings giving the levels.
+The arguments should be coerceable to a `Tables.RowTable` with `rowtable`.
 
 The value is a `Tables.RowTable` and hence can be converted to a `DataFrame`.
 
 # Example
 ```julia-repl
-julia> levs = (prec=["break","maintain"], load=["Y","N"], spkr=["new","old"]);
-julia> crossedfactors(levs) |> DataFrame
-8×3 DataFrames.DataFrame
-│ Row │ prec     │ load   │ spkr   │
-│     │ String   │ String │ String │
-├─────┼──────────┼────────┼────────┤
-│ 1   │ break    │ yes    │ new    │
-│ 2   │ maintain │ yes    │ new    │
-│ 3   │ break    │ no     │ new    │
-│ 4   │ maintain │ no     │ new    │
-│ 5   │ break    │ yes    │ old    │
-│ 6   │ maintain │ yes    │ old    │
-│ 7   │ break    │ no     │ old    │
-│ 8   │ maintain │ no     │ old    │
-
+julia> DataFrame(factorproduct((item=nlevels(3,'I'),), (subj=nlevels(5), age=["Y","Y","Y","O","O"])))
+15×3 DataFrame
+│ Row │ item   │ subj   │ age    │
+│     │ String │ String │ String │
+├─────┼────────┼────────┼────────┤
+│ 1   │ I1     │ S1     │ Y      │
+│ 2   │ I2     │ S1     │ Y      │
+│ 3   │ I3     │ S1     │ Y      │
+│ 4   │ I1     │ S2     │ Y      │
+│ 5   │ I2     │ S2     │ Y      │
+│ 6   │ I3     │ S2     │ Y      │
+│ 7   │ I1     │ S3     │ Y      │
+│ 8   │ I2     │ S3     │ Y      │
+│ 9   │ I3     │ S3     │ Y      │
+│ 10  │ I1     │ S4     │ O      │
+│ 11  │ I2     │ S4     │ O      │
+│ 12  │ I3     │ S4     │ O      │
+│ 13  │ I1     │ S5     │ O      │
+│ 14  │ I2     │ S5     │ O      │
+│ 15  │ I3     │ S5     │ O      │
 ```
 """
-function crossedfactors(namedtup)
-    nms = keys(namedtup)
-    vec([NamedTuple{nms}(s) for s in Iterators.product(values(namedtup)...)])
-end
+factorproduct(facs...) = vec([merge(s...) for s in Iterators.product(rowtable.(facs)...)])
 
 """
     cyclicshift(v::AbstractVector, nrow)
@@ -51,20 +53,6 @@ cyclicshift('a':'d', 8)
 function cyclicshift(v::AbstractVector, nrow)
     vlen = length(v)
     [v[1 + (i + j) % vlen] for i in 0:(nrow - 1), j in 0:(vlen - 1)]
-end
-
-"""
-    itemsubjdf(nitem, nsubj, expfactors)
-
-Return a data frame with `nitem` items crossed with `nsubj` subjects and experimental factors
-given by `expfactors`.  The experimental factors are in a crossed, balanced configuration within
-subject and within item.
-"""
-function itemsubjdf(nitem, nsubj, expfactors)
-    expfacdf = crossedDataFrame(expfactors)
-    df = repeat(withinitem(nitem, expfacdf), outer=nsubj ÷ size(expfacdf,1))
-    df.subj = repeat(PooledArray(nlevels(nsubj)), inner=nitem)
-    df
 end
 
 """
