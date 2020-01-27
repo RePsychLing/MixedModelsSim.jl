@@ -113,7 +113,7 @@ Tables.Schema:
  :subj  String
  :age   String
 
- julia> DataFrame(subjecttable)
+ julia> DataFrame(subject)
  5×2 DataFrame
  │ Row │ subj   │ age    │
  │     │ String │ String │
