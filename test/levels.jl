@@ -1,4 +1,5 @@
-using MixedModelsSim, PooledArrays, Test
+using MixedModelsSim
+using Test
 
 @testset "levels" begin
     levs = nlevels(100, 'k')
