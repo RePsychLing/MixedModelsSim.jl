@@ -8,8 +8,10 @@ export
     itemsubjdf,
     nlevels,
     pooled!,
+    simulate_waldtests,
     withinitem
 
 include("columntable.jl")
+include("power.jl")
 
 end # module

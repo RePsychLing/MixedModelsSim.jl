@@ -1,0 +1,97 @@
+using MixedModels
+using Random, StaticArrays, Tables
+
+"""
+    simulate_waldtests(rng::AbstractRNG, nsamp::Integer, m::LinearMixedModel;
+        β = m.β, σ = m.σ, θ = m.θ, use_threads=false)
+    simulate_waldtests(nsamp::Integer, m::LinearMixedModel;
+        β = m.β, σ = m.σ, θ = m.θ, use_threads=false)
+
+Return a `DataFrame` of z- and p-values for each coefficient in a mixed model.
+This is similar to the [`MixedModels.parametricbootstrap`](@ref), but returns
+test statistics instead of estimates. This is useful for power analyses.
+
+Perform `nsamp` parametric bootstrap replication fits of `m`,
+returning a Vector of named tuples of the associated z- and p-values for the coefficents/
+
+The default random number generator is `Random.GLOBAL_RNG`.
+
+# Named Arguments
+
+`β`, `σ`, and `θ` are the values of `m`'s parameters for simulating the responses.
+
+`use_threads` determines whether threads are used to parallelize the computation.
+Note that this functionality depends on the development version
+
+
+```julia
+using MixedModels, MixedModelsSim
+using Random, StaticArrays, Tables, StatsBase
+
+kb07 = MixedModels.dataset(:kb07);
+form = @formula(rt_raw ~ 1 + spkr + prec + load + (1+spkr+prec+load|subj) + (1+spkr+prec+load|item));
+cont = Dict(:spkr => HelmertCoding(),
+            :prec => HelmertCoding(),
+            :load => HelmertCoding())
+fm1 = fit(MixedModel, form, kb07, contrasts=cont, REML=false);
+zpmt = simulate_waldtests(MersenneTwister(42),10,fm1,use_threads=true);
+# show the indices of individual coefnames
+Dict(enumerate(coefnames(fm1)))
+
+mean(getindex.(columntable(zpmt).p,1) .< 0.05)
+mean(getindex.(columntable(zpmt).p,2) .< 0.05)
+```
+"""
+
+
+
+function simulate_waldtests(
+    rng::AbstractRNG,
+    n::Integer,
+    morig::MixedModel{T};
+    β = morig.β,
+    σ = morig.σ,
+    θ = morig.θ,
+    use_threads = false,
+) where {T}
+    zval, pval, nβ, m = similar(β), similar(β), length(β), deepcopy(morig)
+    y₀ = copy(response(m))
+    # we need to do for in-place operations to work across threads
+    m_threads = [m]
+    zval_threads = [zval]
+    pval_threads = [pval]
+
+    if use_threads
+        Threads.resize_nthreads!(m_threads)
+        Threads.resize_nthreads!(zval_threads)
+        Threads.resize_nthreads!(pval_threads)
+    end
+
+    rnglock = ReentrantLock()
+    replicate(n, use_threads=use_threads) do
+        mod = m_threads[Threads.threadid()]
+        local zval = zval_threads[Threads.threadid()]
+        local pval = pval_threads[Threads.threadid()]
+        lock(rnglock)
+        mod = simulate!(rng, mod, β = β, σ = σ, θ = θ)
+        unlock(rnglock)
+        refit!(mod)
+        ct = coeftable(mod)
+        (
+        # ct.testvalcol
+        # ct.pvalcol
+         z = SVector{nβ,T}(ct.cols[3]),
+         p = SVector{nβ,T}(ct.cols[4]),
+        )
+    end
+end
+
+simulate_waldtests(
+    n::Integer,
+    morig::MixedModel{T};
+    β = morig.β,
+    σ = morig.σ,
+    θ = morig.θ,
+    use_threads = false,
+) where {T} = simulate_waldtests(Random.GLOBAL_RNG, nsamp, morig,
+                                  β = β, σ = σ, θ = θ, use_threads = use_threads)
