@@ -65,6 +65,10 @@ function simulate_waldtests(
     θ = morig.θ,
     use_threads = false,
 ) where {T}
+    β = convert(Vector{T},β)
+    σ = T(σ)
+    θ = convert(Vector{T},θ)
+
     nβ, m = length(β), deepcopy(morig)
     # we need to do for in-place operations to work across threads
     m_threads = [m]
