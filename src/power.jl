@@ -42,6 +42,8 @@ mean(getindex.(columntable(zpmt).p, Symbol("(Intercept)")) .< 0.05)
 mean(getindex.(columntable(zpmt).p, 2) .< 0.05)
 mean(getindex.(columntable(zpmt).p, Symbol("spkr: old")) .< 0.05)
 
+shortestcovint(samples[!,Symbol("prec: maintain")])
+
 using Gadfly
 samples = DataFrame(columntable(zpmt).β)
 
@@ -83,10 +85,10 @@ function simulate_waldtests(
         (
         # ct.testvalcol
         # ct.pvalcol
-         β = NamedTuple{names}(SVector{nβ,T}(ct.cols[1])),
-         se = NamedTuple{names}(SVector{nβ,T}(ct.cols[2])),
-         z = NamedTuple{names}(SVector{nβ,T}(ct.cols[3])),
-         p = NamedTuple{names}(SVector{nβ,T}(ct.cols[4])),
+         β = NamedTuple{names}(ct.cols[1]),
+         se = NamedTuple{names}(ct.cols[2]),
+         z = NamedTuple{names}(ct.cols[3]),
+         p = NamedTuple{names}(ct.cols[4]),
         )
     end
 end
