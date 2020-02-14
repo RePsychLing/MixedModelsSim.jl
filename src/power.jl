@@ -79,6 +79,7 @@ function simulate_waldtests(
         # ct.testvalcol
         # ct.pvalcol
          β = NamedTuple{names}(SVector{nβ,T}(ct.cols[1])),
+         se = NamedTuple{names}(SVector{nβ,T}(ct.cols[2])),
          z = NamedTuple{names}(SVector{nβ,T}(ct.cols[3])),
          p = NamedTuple{names}(SVector{nβ,T}(ct.cols[4])),
         )
