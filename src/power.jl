@@ -63,17 +63,12 @@ function simulate_waldtests(
     θ = morig.θ,
     use_threads = false,
 ) where {T}
-    zval, pval, nβ, m = similar(β), similar(β), length(β), deepcopy(morig)
-    y₀ = copy(response(m))
+    nβ, m = length(β), deepcopy(morig)
     # we need to do for in-place operations to work across threads
     m_threads = [m]
-    zval_threads = [zval]
-    pval_threads = [pval]
 
     if use_threads
         Threads.resize_nthreads!(m_threads)
-        Threads.resize_nthreads!(zval_threads)
-        Threads.resize_nthreads!(pval_threads)
     end
 
     rnglock = ReentrantLock()
