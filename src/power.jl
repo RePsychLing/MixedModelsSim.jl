@@ -26,7 +26,7 @@ Note that this functionality depends on the development version
 
 ```julia
 using MixedModels, MixedModelsSim
-using Random, StaticArrays, Tables, StatsBase
+using DataFrames, Gadfly, Random, StaticArrays, StatsBase, Tables
 
 kb07 = MixedModels.dataset(:kb07);
 form = @formula(rt_raw ~ 1 + spkr + prec + load + (1+spkr+prec+load|subj) + (1+spkr+prec+load|item));
@@ -42,18 +42,17 @@ mean(getindex.(columntable(zpmt).p, Symbol("(Intercept)")) .< 0.05)
 mean(getindex.(columntable(zpmt).p, 2) .< 0.05)
 mean(getindex.(columntable(zpmt).p, Symbol("spkr: old")) .< 0.05)
 
-shortestcovint(samples[!,Symbol("prec: maintain")])
-
-using Gadfly
 samples = DataFrame(columntable(zpmt).β)
+shortestcovint(samples[!,Symbol("prec: maintain")])
 
 plot(samples, layer(x=Symbol("load: yes")),
     Geom.density,
     Guide.xlabel("Bootstrap estimates of 'load: yes'"))
 
-plot(stack(samples), layer(x=:value, color=:variable),
-    Geom.density,
-    Guide.xlabel("Bootstrap estimates of β"))
+plot(stack(samples),
+   layer(x=:value, color=:variable, xgroup=:variable),
+   Geom.subplot_grid(Geom.density, free_x_axis=true),
+   Guide.xlabel("Bootstrap estimates of β"))
 ```
 """
 function simulate_waldtests(
