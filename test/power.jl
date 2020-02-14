@@ -1,4 +1,6 @@
 using MixedModelsSim
+using MixedModels
+using Random
 using Tables
 using Test
 
@@ -14,6 +16,7 @@ using Test
 	pvals = getindex.(columntable(zpmt).p,1)
 	power = sum(pvals .< 0.05) / length(pvals)
 	@test power == 1.
+	@test getindex.(columntable(zpmt).p,1) == getindex.(columntable(zpmt).p,Symbol("(Intercept)"))
 	pvals = getindex.(columntable(zpmt).p,2)
 	power = sum(pvals .< 0.05) / length(pvals)
 	@test power == 0.6

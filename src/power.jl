@@ -7,7 +7,7 @@ using Random, StaticArrays, Tables
     simulate_waldtests(nsamp::Integer, m::LinearMixedModel;
         β = m.β, σ = m.σ, θ = m.θ, use_threads=false)
 
-Return a `DataFrame` of z- and p-values for each coefficient in a mixed model.
+Return a Vector of βs, z- and p-values for each coefficient in a mixed model.
 This is similar to the [`MixedModels.parametricbootstrap`](@ref), but returns
 test statistics instead of estimates. This is useful for power analyses.
 
@@ -35,16 +35,15 @@ cont = Dict(:spkr => HelmertCoding(),
             :load => HelmertCoding())
 fm1 = fit(MixedModel, form, kb07, contrasts=cont, REML=false);
 zpmt = simulate_waldtests(MersenneTwister(42),10,fm1,use_threads=true);
-# show the indices of individual coefnames
-Dict(enumerate(coefnames(fm1)))
 
-mean(getindex.(columntable(zpmt).p,1) .< 0.05)
-mean(getindex.(columntable(zpmt).p,2) .< 0.05)
+mean(getindex.(columntable(zpmt).p, 1) .< 0.05)
+mean(getindex.(columntable(zpmt).p, Symbol("(Intercept)")) .< 0.05)
+
+mean(getindex.(columntable(zpmt).p, 2) .< 0.05)
+mean(getindex.(columntable(zpmt).p, Symbol("spkr: old")) .< 0.05)
+
 ```
 """
-
-
-
 function simulate_waldtests(
     rng::AbstractRNG,
     n::Integer,
@@ -70,18 +69,18 @@ function simulate_waldtests(
     rnglock = ReentrantLock()
     replicate(n, use_threads=use_threads) do
         mod = m_threads[Threads.threadid()]
-        local zval = zval_threads[Threads.threadid()]
-        local pval = pval_threads[Threads.threadid()]
         lock(rnglock)
         mod = simulate!(rng, mod, β = β, σ = σ, θ = θ)
         unlock(rnglock)
         refit!(mod)
         ct = coeftable(mod)
+        names = Tuple(Symbol.(ct.rownms))
         (
         # ct.testvalcol
         # ct.pvalcol
-         z = SVector{nβ,T}(ct.cols[3]),
-         p = SVector{nβ,T}(ct.cols[4]),
+         β = NamedTuple{names}(SVector{nβ,T}(ct.cols[1])),
+         z = NamedTuple{names}(SVector{nβ,T}(ct.cols[3])),
+         p = NamedTuple{names}(SVector{nβ,T}(ct.cols[4])),
         )
     end
 end
