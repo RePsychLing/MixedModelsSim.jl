@@ -42,6 +42,16 @@ mean(getindex.(columntable(zpmt).p, Symbol("(Intercept)")) .< 0.05)
 mean(getindex.(columntable(zpmt).p, 2) .< 0.05)
 mean(getindex.(columntable(zpmt).p, Symbol("spkr: old")) .< 0.05)
 
+using Gadfly
+samples = DataFrame(columntable(zpmt).β)
+
+plot(samples, layer(x=Symbol("load: yes")),
+    Geom.density,
+    Guide.xlabel("Bootstrap estimates of 'load: yes'"))
+
+plot(stack(samples), layer(x=:value, color=:variable),
+    Geom.density,
+    Guide.xlabel("Bootstrap estimates of β"))
 ```
 """
 function simulate_waldtests(
