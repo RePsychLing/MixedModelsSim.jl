@@ -103,5 +103,5 @@ simulate_waldtests(
     σ = morig.σ,
     θ = morig.θ,
     use_threads = false,
-) where {T} = simulate_waldtests(Random.GLOBAL_RNG, nsamp, morig,
+) where {T} = simulate_waldtests(Random.GLOBAL_RNG, n, morig,
                                   β = β, σ = σ, θ = θ, use_threads = use_threads)
