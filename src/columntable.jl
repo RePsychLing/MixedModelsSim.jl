@@ -114,7 +114,9 @@ end
     sim_to_df(sim)
 
 Returns a `DataFrame` with 6 columns: `iteration`, `coefname`, `beta`, `se`, `z`, `p`. 
-Rows are all the coefficients for each iteration of `sim`, the output of `simulate_waldtests`.
+Rows are all the coefficients for each iteration of `sim`, the output of `simulate_waldtests`. 
+`iteration` is not guaranteed to be the same across runs of `simulate_waldtests` with the same seed, 
+even though the samples will be.
 """
 
 function sim_to_df(sims)
