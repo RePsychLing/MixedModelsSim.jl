@@ -1,5 +1,5 @@
 """
-    simdat_crossed(subj_n = 20, item_n = 50)
+    simdat_crossed(subj_n, item_n; subj_btwn, item_btwn, both_win)
 
 Return a `DataFrame` with a design specified by the:
 * number of subjects (`subj_n`), 
