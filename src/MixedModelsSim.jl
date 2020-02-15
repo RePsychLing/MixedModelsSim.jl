@@ -12,9 +12,11 @@ export
     withinitem
     withinitem,
     power_table,
-    sim_to_df
+    sim_to_df,
+    simdat_crossed
 
 include("columntable.jl")
 include("power.jl")
+include("simdat.jl")
 
 end # module
