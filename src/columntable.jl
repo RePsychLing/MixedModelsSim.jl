@@ -105,7 +105,7 @@ simulated p-values less than alpha, for `sim`, the output of `simulate_waldtests
 
 function power_table(sim, alpha = 0.05)
     pvals = DataFrame(columntable(sim).p)
-    pvals = stack(pvals, 1:ncol(pvals)) 
+    pvals = stack(pvals) 
     pwr = by(pvals, :variable, :value => x->mean(x.<alpha) )
     rename!(pwr, ["coefname", "power"])
 end
@@ -125,7 +125,7 @@ function sim_to_df(sims)
         df[!, :var] .= string.(collect(keys(sim)))
         append!(tab, df)
     end
-    longtab = stack(tab, 1:4, variable_name = :coefname)
+    longtab = stack(tab, 1:(ncol(tab)-2), variable_name = :coefname)
     widetab = unstack(longtab, :var, :value)
     rename!(widetab, ["coefname", "iteration",  "p",  "se",  "z",  "beta" ])
     df_ordered = widetab[[:iteration, :coefname, :beta, :se, :z, :p]]
