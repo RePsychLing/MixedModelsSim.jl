@@ -97,7 +97,7 @@ function withinitem(nitem, df; tag = 'I')
 end
 
 """
-    power_table(sim, 0.05)
+    power_table(sim, alpha = 0.05)
 
 Returns a `DataFrame` with two columns, `coefname` and `power`, with the proportion of 
 simulated p-values less than alpha, for `sim`, the output of `simulate_waldtests`.
