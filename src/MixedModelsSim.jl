@@ -9,7 +9,6 @@ export
     nlevels,
     pooled!,
     simulate_waldtests,
-    withinitem
     withinitem,
     power_table,
     sim_to_df,
