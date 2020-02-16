@@ -95,3 +95,41 @@ function withinitem(nitem, df; tag = 'I')
     value.item = repeat(PooledArray(nlevels(nitem, tag=tag)), outer=nrow)
     value
 end
+
+"""
+    power_table(sim, alpha = 0.05)
+
+Returns a `DataFrame` with two columns, `coefname` and `power`, with the proportion of 
+simulated p-values less than alpha, for `sim`, the output of `simulate_waldtests`.
+"""
+
+function power_table(sim, alpha = 0.05)
+    pvals = DataFrame(columntable(sim).p)
+    pvals = stack(pvals) 
+    pwr = by(pvals, :variable, :value => x->mean(x.<alpha) )
+    rename!(pwr, ["coefname", "power"])
+end
+
+"""
+    sim_to_df(sim)
+
+Returns a `DataFrame` with 6 columns: `iteration`, `coefname`, `beta`, `se`, `z`, `p`. 
+Rows are all the coefficients for each iteration of `sim`, the output of `simulate_waldtests`. 
+`iteration` is not guaranteed to be the same across runs of `simulate_waldtests` with the same seed, 
+even though the samples will be.
+"""
+
+function sim_to_df(sims)
+    tab = DataFrame()
+    for (i, sim) in enumerate(sims)
+        df = DataFrame(sim)
+        df[!, :iteration] .= i
+        df[!, :var] .= string.(collect(keys(sim)))
+        append!(tab, df)
+    end
+    longtab = stack(tab, 1:(ncol(tab)-2), variable_name = :coefname)
+    widetab = unstack(longtab, :var, :value)
+    rename!(widetab, ["coefname", "iteration",  "p",  "se",  "z",  "beta" ])
+    df_ordered = widetab[[:iteration, :coefname, :beta, :se, :z, :p]]
+    sort!(df_ordered, [:iteration])
+end
