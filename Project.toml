@@ -1,6 +1,6 @@
 name = "MixedModelsSim"
 uuid = "d5ae56c5-23ca-4a1f-b505-9fc4796fc1fe"
-authors = ["Phillip Alday", "Douglas Bates", "Shravan Vasishth", "Reinhold Kliegl"]
+authors = ["Phillip Alday", "Douglas Bates", "Lisa DeBruine", "Reinhold Kliegl"]
 version = "0.1.0"
 
 [deps]
