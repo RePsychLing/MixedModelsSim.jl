@@ -145,3 +145,7 @@ The default tag is `S` so this sequence could be generated more simply as
 julia> show(nlevels(5))
 ["S1", "S2", "S3", "S4", "S5"]
 ```
+
+## Acknowledgements
+
+The development of this package was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
