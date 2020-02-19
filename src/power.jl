@@ -28,7 +28,7 @@ Note that this functionality depends on the development version
 using MixedModels, MixedModelsSim
 using DataFrames, Gadfly, Random, StaticArrays, StatsBase, Tables
 
-kb07 = MixedModels.dataset(:kb07);
+kb07 = MixedModelsSim.dataset(:kb07);
 form = @formula(rt_raw ~ 1 + spkr + prec + load + (1+spkr+prec+load|subj) + (1+spkr+prec+load|item));
 cont = Dict(:spkr => HelmertCoding(),
             :prec => HelmertCoding(),

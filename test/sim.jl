@@ -3,7 +3,7 @@ using DataFrames, Tables
 using Statistics
 using Test
 
-kb07 = MixedModels.dataset(:kb07);
+kb07 = MixedModelsSim.dataset(:kb07);
 form = @formula(rt_raw ~ 1 + spkr + prec + load + (1+spkr+prec+load|subj) + (1+spkr+prec+load|item));
 cont = Dict(:spkr => HelmertCoding(),
             :prec => HelmertCoding(),
