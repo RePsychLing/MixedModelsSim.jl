@@ -11,17 +11,21 @@ Return a `DataFrame` with a design specified by the:
 Factors should be specified as Dicts in the following format:
 
 Dict(
-    "factor1_name" => ["F1_level1", "F1_level2"],
-    "factor2_name" => ["F2_level1", "F2_level2", "F2_level3"]
+    :factor1_name => ["F1_level1", "F1_level2"],
+    :factor2_name => ["F2_level1", "F2_level2", "F2_level3"]
 )
+
+Dict keys can be strings or symbols, but have to be consistent 
+for matching between-item, between-subject factors
 """
 
 function simdat_crossed(subj_n = 1, item_n = 1;
-    subj_btwn = nothing, item_btwn = nothing, both_win = nothing)
+    subj_btwn = nothing, item_btwn = nothing, both_win = nothing,
+    subj_prefix = "S", item_prefix = "I")
 
     # set up subj table
     if isnothing(subj_btwn)
-        subj_vals = [nlevels(subj_n, "S")]
+        subj_vals = [nlevels(subj_n, subj_prefix)]
         sb_vars = []
     else
         sc = values(subj_btwn) |> collect
@@ -29,7 +33,7 @@ function simdat_crossed(subj_n = 1, item_n = 1;
         subj_prod = Iterators.product(sc...)
         subj_total_n = length(subj_prod)
         subj_vals = columntable(subj_prod) |> collect
-        subj_vals[1] = nlevels(subj_total_n, "S")
+        subj_vals[1] = nlevels(subj_total_n, subj_prefix) # rename subjects
         sb_vars = collect(keys(subj_btwn))
     end
 
@@ -38,15 +42,15 @@ function simdat_crossed(subj_n = 1, item_n = 1;
 
     # set up item table
     if isnothing(item_btwn)
-        item_vals = [nlevels(item_n, "I")]
+        item_vals = [nlevels(item_n, item_prefix)]
         ib_vars = []
     else
         ic = values(item_btwn) |> collect
-        ic = vcat([nlevels(item_n, "I")], ic)
+        ic = vcat([nlevels(item_n)], ic)
         item_prod = Iterators.product(ic...)
         item_total_n = length(item_prod)
         item_vals = columntable(item_prod) |> collect
-        item_vals[1] = nlevels(item_total_n, "I")
+        item_vals[1] = nlevels(item_total_n, item_prefix) # rename items
         ib_vars = collect(keys(item_btwn))
     end
 
@@ -54,10 +58,20 @@ function simdat_crossed(subj_n = 1, item_n = 1;
     item = NamedTuple{Tuple(Symbol.(item_names))}(item_vals)
 
     # set up within both table
-    if (isnothing(both_win))
-        # cross the subject and item tables 
-        design = factorproduct(subj, item) |> DataFrame
-    else 
+    both_btwn_vars = Symbol.(intersect(sb_vars, ib_vars))
+    subj_df = DataFrame(subj)
+    item_df = DataFrame(item)
+
+    
+    # cross the subject and item tables 
+    #design = factorproduct(subj, item) |> DataFrame
+    if length(both_btwn_vars) == 0
+        design = join(subj_df, item_df, kind = :cross)
+    else  
+        design = join(subj_df, item_df, on = both_btwn_vars)
+    end
+
+    if (!isnothing(both_win))
         wc = values(both_win) |> collect
         win_prod = Iterators.product(wc...)
         win_vals = columntable(win_prod) |> collect
@@ -65,7 +79,8 @@ function simdat_crossed(subj_n = 1, item_n = 1;
         win = NamedTuple{Tuple(Symbol.(win_names))}(win_vals)
 
         # cross the subject and item tables with any within factors 
-        design = factorproduct(subj, item, win) |> DataFrame
+        #design = factorproduct(subj, item, win) |> DataFrame
+        design = join(design, DataFrame(win), kind = :cross)
     end
 
     # add random numbers as a DV
