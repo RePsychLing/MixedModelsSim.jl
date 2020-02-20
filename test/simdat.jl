@@ -42,6 +42,7 @@ using Test
         end
     end
 
+    # crossed between-item/subject factors
     subj_n = 1
     item_n = 1
     subj_btwn = Dict("age" => ["O", "Y"],
@@ -51,10 +52,7 @@ using Test
                      "B" => ["B1", "B2"])
     both_win = nothing
 
-    dat = simdat_crossed(subj_n, item_n, 
-                             subj_btwn = subj_btwn, 
-                             item_btwn = item_btwn, 
-                             both_win = both_win)
+    dat = simdat_crossed(subj_n, item_n, subj_btwn = subj_btwn, item_btwn = item_btwn, both_win = both_win)
 
     @test nrow(dat) == 8
     @test ncol(dat) == 6
@@ -64,20 +62,15 @@ using Test
     @test dat.age == ["O", "O", "O", "O", "Y", "Y", "Y", "Y"]
     @test length(unique(dat.subj)) == 8
     @test length(unique(dat.item)) == 4
-end
 
-
-@testset "simdat_crossed" begin
+    # varying item_n and subj_n
     for subj_n in [1, 5, 10, 20]
         for item_n in [1, 5, 10, 20]
             subj_btwn = Dict(:age => ["O", "Y"],
                             :pet => ["cat", "dog"])
             item_btwn = Dict(:cond => ["A", "B"])
             both_win = Dict(:time => ["morning", "evening"])
-            dat = simdat_crossed(subj_n, item_n, 
-                                subj_btwn = subj_btwn, 
-                                item_btwn = item_btwn, 
-                                both_win = both_win)
+            dat = simdat_crossed(subj_n, item_n, subj_btwn = subj_btwn, item_btwn = item_btwn, both_win = both_win)
 
             @test nrow(dat) == 16*subj_n*item_n
             @test length(unique(dat.subj)) == 4*subj_n
@@ -124,4 +117,13 @@ end
         @test length(unique(dat.item)) == item_n
         @test names(dat) == [:subj, :item, :n, :dv]
     end
+
+    for item_prefix in ["I", "item", "my item"]
+        for subj_prefix in ["S", "subj", "my subj"]
+            dat = simdat_crossed(2, 2, item_prefix = item_prefix, subj_prefix = subj_prefix)
+            @test dat.subj == subj_prefix.*["1", "1", "2", "2"]
+            @test dat.item == item_prefix.*["1", "2", "1", "2"]
+        end
+    end
+
 end
