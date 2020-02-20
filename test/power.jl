@@ -12,7 +12,7 @@ using Test
 	            :prec => HelmertCoding(),
 	            :load => HelmertCoding())
 	fm1 = fit(MixedModel, form, kb07, contrasts=cont, REML=false);
-	zpmt = simulate_waldtests(MersenneTwister(42),10,fm1,use_threads=true);
+	zpmt = simulate_waldtests(MersenneTwister(42),10,fm1,use_threads=false);
 	pvals = getindex.(columntable(zpmt).p,1)
 	power = sum(pvals .< 0.05) / length(pvals)
 	@test power == 1.
