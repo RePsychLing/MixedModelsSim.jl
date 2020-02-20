@@ -3,12 +3,19 @@ using DataFrames, Tables
 using Test
 
 @testset "simdat_crossed both_btwn" begin
+    # matching bwtn item/subj factors have different levels
+    subj_btwn = Dict(:A => ["A", "B", "C"])
+    item_btwn = Dict(:A => ["A", "B"])
+    warn_str = "A has levels [\"A\", \"B\", \"C\"] for subj and [\"A\", \"B\"] for item"
+    #@test_warn warn_str simdat_crossed(1, 1, subj_btwn = subj_btwn, item_btwn = item_btwn)
+
+
     for subj_n in [1, 5, 10, 20] 
         for item_n in [1, 5, 10, 20] 
             for b in [2, 3, 4, 5]
                 btwn = nlevels(b, "A")
                 subj_btwn = Dict(:A => btwn)
-                item_btwn = Dict(:A => btwn)
+                item_btwn = Dict("A" => btwn)
                 both_win = nothing
 
                 dat = simdat_crossed(subj_n, item_n, subj_btwn = subj_btwn, item_btwn = item_btwn, both_win = both_win)
@@ -125,5 +132,4 @@ using Test
             @test dat.item == item_prefix.*["1", "2", "1", "2"]
         end
     end
-
 end

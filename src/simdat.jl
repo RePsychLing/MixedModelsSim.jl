@@ -8,6 +8,9 @@ Return a `DataFrame` with a design specified by the:
 * between-item factors (`item_btwn`)
 * within-subject/item factors (`both_win`)
 
+If a factor is both between-subject and between-item, 
+put it in both `subj_btwn` and `item_btwn` with the same keys and the same levels.
+
 Factors should be specified as Dicts in the following format:
 
 Dict(
@@ -15,8 +18,7 @@ Dict(
     :factor2_name => ["F2_level1", "F2_level2", "F2_level3"]
 )
 
-Dict keys can be strings or symbols, but have to be consistent 
-for matching between-item, between-subject factors
+Dict keys can be strings or symbols.
 """
 
 function simdat_crossed(subj_n = 1, item_n = 1;
@@ -37,8 +39,8 @@ function simdat_crossed(subj_n = 1, item_n = 1;
         sb_vars = collect(keys(subj_btwn))
     end
 
-    subj_names = vcat(["subj"], sb_vars)
-    subj = NamedTuple{Tuple(Symbol.(subj_names))}(subj_vals)
+    subj_names = Symbol.(vcat(["subj"], sb_vars))
+    subj = NamedTuple{Tuple(subj_names)}(subj_vals)
 
     # set up item table
     if isnothing(item_btwn)
@@ -54,14 +56,23 @@ function simdat_crossed(subj_n = 1, item_n = 1;
         ib_vars = collect(keys(item_btwn))
     end
 
-    item_names = vcat(["item"], ib_vars)
-    item = NamedTuple{Tuple(Symbol.(item_names))}(item_vals)
+    item_names = Symbol.(vcat(["item"], ib_vars))
+    item = NamedTuple{Tuple(item_names)}(item_vals)
 
     # set up within both table
-    both_btwn_vars = Symbol.(intersect(sb_vars, ib_vars))
+    both_btwn_vars = Symbol.(intersect(subj_names, item_names))
     subj_df = DataFrame(subj)
     item_df = DataFrame(item)
 
+    for bb in both_btwn_vars 
+        subj_levels = unique(subj[bb])
+        item_levels = unique(item[bb])
+        unique(item[bb])
+        d = setdiff(subj_levels, item_levels)
+        if length(d) > 0 
+            @warn(string(bb)*" has levels "*string(subj_levels)*" for subj and "*string(item_levels)*" for item")
+        end
+    end
     
     # cross the subject and item tables 
     #design = factorproduct(subj, item) |> DataFrame
