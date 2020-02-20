@@ -146,8 +146,13 @@ julia> show(nlevels(5))
 ["S1", "S2", "S3", "S4", "S5"]
 ```
 
+## Acknowledgements
+
+The development of this package was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
+
 [T1-img]: https://github.com/JuliaStats/MixedModels.jl/workflows/Tier1/badge.svg
 [T1-url]: https://github.com/JuliaStats/MixedModels.jl/actions?workflow=Tier1
 
 [T2-img]: https://github.com/JuliaStats/MixedModels.jl/workflows/Tier2/badge.svg
 [T2-url]: https://github.com/JuliaStats/MixedModels.jl/actions?workflow=Tier2
+
