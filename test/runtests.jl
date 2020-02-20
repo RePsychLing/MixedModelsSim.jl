@@ -1,3 +1,4 @@
+using Documenter
 using MixedModelsSim
 using Test
 
