@@ -83,6 +83,7 @@ function simulate_waldtests(
         mod = simulate!(rng, mod, β = β, σ = σ, θ = θ)
         unlock(rnglock)
         refit!(mod)
+        @info objective(mod)
         ct = coeftable(mod)
         names = Tuple(Symbol.(ct.rownms))
         (
