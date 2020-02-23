@@ -71,29 +71,45 @@ function simulate_waldtests(
     nβ, m = length(β), deepcopy(morig)
     # we need to do for in-place operations to work across threads
     m_threads = [m]
+    coef_threads = [similar(β)]
+    stderr_threads = [similar(β)]
+    zstat_threads = [similar(β)]
+    pval_threads = [similar(β)]
 
     if use_threads
         Threads.resize_nthreads!(m_threads)
+        Threads.resize_nthreads!(coef_threads)
+        Threads.resize_nthreads!(stderr_threads)
+        Threads.resize_nthreads!(zstat_threads)
+        Threads.resize_nthreads!(pval_threads)        
     end
 
+    χsq = Chisq(1)
+
+    cnms = Symbol.(coefnames(morig))
+
+    tidynms = (:coefname,:beta,:se,:z,:p)
+    results = NamedTuple{tidynms,Tuple{Symbol,T,T,T,T}}[]
+
     rnglock = ReentrantLock()
+    pushlock = ReentrantLock()
     replicate(n, use_threads=use_threads) do
         mod = m_threads[Threads.threadid()]
         lock(rnglock)
         mod = simulate!(rng, mod, β = β, σ = σ, θ = θ)
         unlock(rnglock)
         refit!(mod)
-        ct = coeftable(mod)
-        names = Tuple(Symbol.(ct.rownms))
-        (
-        # ct.testvalcol
-        # ct.pvalcol
-         β = NamedTuple{names}(ct.cols[1]),
-         se = NamedTuple{names}(ct.cols[2]),
-         z = NamedTuple{names}(ct.cols[3]),
-         p = NamedTuple{names}(ct.cols[4]),
-        )
+        simβ = MixedModels.fixef!(coef_threads[Threads.threadid()], mod)
+        simse = MixedModels.stderror!(stderr_threads[Threads.threadid()], mod)
+        simz = map!(/, zstat_threads[Threads.threadid()], simβ, simse)
+        simp = map!(z -> ccdf(χsq, abs2(z)), pval_threads[Threads.threadid()], simz)
+        lock(pushlock)
+        for t in zip(cnms, simβ, simse, simz, simp)
+            push!(results, NamedTuple{tidynms}(t))
+        end
+        unlock(pushlock)
     end
+    results
 end
 
 simulate_waldtests(

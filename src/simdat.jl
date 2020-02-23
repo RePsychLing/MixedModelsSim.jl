@@ -97,7 +97,6 @@ Rows are all the coefficients for each iteration of `sim`, the output of `simula
 `iteration` is not guaranteed to be the same across runs of `simulate_waldtests` with the same seed, 
 even though the samples will be.
 """
-
 function sim_to_df(sims)
     tab = DataFrame()
     for (i, sim) in enumerate(sims)

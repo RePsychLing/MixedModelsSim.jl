@@ -1,6 +1,10 @@
 module MixedModelsSim
 
-using DataFrames, PooledArrays, Tables, Statistics
+using DataFrames
+using Distributions: Chisq, ccdf
+using PooledArrays
+using Tables
+using Statistics
 
 export
     cyclicshift,
