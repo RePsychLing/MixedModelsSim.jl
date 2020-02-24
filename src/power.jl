@@ -1,6 +1,3 @@
-using MixedModels
-using Random, StaticArrays, Tables
-
 """
     simulate_waldtests(rng::AbstractRNG, nsamp::Integer, m::LinearMixedModel;
         β = m.β, σ = m.σ, θ = m.θ, use_threads=false)
@@ -26,7 +23,7 @@ Note that this functionality depends on the development version
 
 ```julia
 using MixedModels, MixedModelsSim
-using DataFrames, Gadfly, Random, StaticArrays, StatsBase, Tables
+using DataFrames, Gadfly, Random, StatsBase, Tables
 
 kb07 = MixedModels.dataset(:kb07);
 form = @formula(rt_raw ~ 1 + spkr + prec + load + (1+spkr+prec+load|subj) + (1+spkr+prec+load|item));
@@ -34,25 +31,18 @@ cont = Dict(:spkr => HelmertCoding(),
             :prec => HelmertCoding(),
             :load => HelmertCoding())
 fm1 = fit(MixedModel, form, kb07, contrasts=cont, REML=false);
-zpmt = simulate_waldtests(MersenneTwister(42),10,fm1,use_threads=true);
+zpmt = DataFrame(simulate_waldtests(MersenneTwister(42), 100, fm1, use_threads=true));
 
-mean(getindex.(columntable(zpmt).p, 1) .< 0.05)
-mean(getindex.(columntable(zpmt).p, Symbol("(Intercept)")) .< 0.05)
+by(zpmt, :coefname, power = :p => p -> mean(p .< 0.05))
 
-mean(getindex.(columntable(zpmt).p, 2) .< 0.05)
-mean(getindex.(columntable(zpmt).p, Symbol("spkr: old")) .< 0.05)
+by(zpmt, :coefname, interval = :beta => β ->  Tuple(shortestcovint(β)))
 
-samples = DataFrame(columntable(zpmt).β)
-shortestcovint(samples[!,Symbol("prec: maintain")])
-
-plot(samples, layer(x=Symbol("load: yes")),
-    Geom.density,
-    Guide.xlabel("Bootstrap estimates of 'load: yes'"))
-
-plot(stack(samples),
-   layer(x=:value, color=:variable, xgroup=:variable),
-   Geom.subplot_grid(Geom.density, free_x_axis=true),
-   Guide.xlabel("Bootstrap estimates of β"))
+plot(
+    zpmt,
+    layer(x=:beta, color=:coefname, xgroup=:coefname),
+    Geom.subplot_grid(Geom.density, free_x_axis=true),
+    Guide.xlabel("Bootstrap estimates of β")
+)
 ```
 """
 function simulate_waldtests(
@@ -89,7 +79,7 @@ function simulate_waldtests(
     cnms = Symbol.(coefnames(morig))
 
     tidynms = (:coefname,:beta,:se,:z,:p)
-    results = NamedTuple{tidynms,Tuple{Symbol,T,T,T,T}}[]
+    results = sizehint!(NamedTuple{tidynms,Tuple{Symbol,T,T,T,T}}[], n)
 
     rnglock = ReentrantLock()
     pushlock = ReentrantLock()
