@@ -65,27 +65,32 @@ function simulate_waldtests(
     stderr_threads = [similar(β)]
     zstat_threads = [similar(β)]
     pval_threads = [similar(β)]
+    iter_threads = [similar(β, Int)]
 
     if use_threads
         Threads.resize_nthreads!(m_threads)
         Threads.resize_nthreads!(coef_threads)
         Threads.resize_nthreads!(stderr_threads)
         Threads.resize_nthreads!(zstat_threads)
-        Threads.resize_nthreads!(pval_threads)        
+        Threads.resize_nthreads!(pval_threads)
+        Threads.resize_nthreads!(iter_threads)        
     end
 
     χsq = Chisq(1)
 
     cnms = Symbol.(coefnames(morig))
 
-    tidynms = (:coefname,:beta,:se,:z,:p)
-    results = sizehint!(NamedTuple{tidynms,Tuple{Symbol,T,T,T,T}}[], n)
+    tidynms = (:coefname,:iteration,:β,:se,:z,:p)
+    results = sizehint!(NamedTuple{tidynms,Tuple{Symbol,Int,T,T,T,T}}[], n)
 
     rnglock = ReentrantLock()
     pushlock = ReentrantLock()
+    iter = 0
     replicate(n, use_threads=use_threads) do
         mod = m_threads[Threads.threadid()]
         lock(rnglock)
+        iter += 1
+        fill!(iter_threads[Threads.threadid()], iter)
         mod = simulate!(rng, mod, β = β, σ = σ, θ = θ)
         unlock(rnglock)
         refit!(mod)
@@ -94,7 +99,7 @@ function simulate_waldtests(
         simz = map!(/, zstat_threads[Threads.threadid()], simβ, simse)
         simp = map!(z -> ccdf(χsq, abs2(z)), pval_threads[Threads.threadid()], simz)
         lock(pushlock)
-        for t in zip(cnms, simβ, simse, simz, simp)
+        for t in zip(cnms, iter_threads[Threads.threadid()], simβ, simse, simz, simp)
             push!(results, NamedTuple{tidynms}(t))
         end
         unlock(pushlock)
