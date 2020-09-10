@@ -85,7 +85,7 @@ simulated p-values less than alpha, for `sim`, the output of `simulate_waldtests
 function power_table(sim, alpha = 0.05)
     pvals = DataFrame(columntable(sim).p)
     pvals = stack(pvals) 
-    pwr = by(pvals, :variable, :value => x->mean(x.<alpha) )
+    pwr = combine(groupby(pvals, :variable), :value => x->mean(x.<alpha))
     rename!(pwr, ["coefname", "power"])
 end
 
