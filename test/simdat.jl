@@ -18,7 +18,7 @@ using Test
         @test nrow(dat) == 16*subj_n*item_n
         @test length(unique(dat.subj)) == 4*subj_n
         @test length(unique(dat.item)) == 2*item_n
-        @test names(dat) == [:subj, :pet, :age, :item, :cond, :time, :dv]
+        @test names(dat) == ["subj", "pet", "age", "item", "cond", "time", "dv"]
     end
 
     # different numbers of levels for subj_btwn
@@ -31,7 +31,7 @@ using Test
         @test nrow(dat) == n*subj_n*item_n
         @test length(unique(dat.subj)) == n*subj_n
         @test length(unique(dat.item)) == item_n
-        @test names(dat) == [:subj, :n, :item, :dv]
+        @test names(dat) == ["subj", "n", "item", "dv"]
     end
 
     # different numbers of levels for item_btwn
@@ -44,7 +44,7 @@ using Test
         @test nrow(dat) == n*subj_n*item_n
         @test length(unique(dat.subj)) == subj_n
         @test length(unique(dat.item)) == n*item_n
-        @test names(dat) == [:subj, :item, :n, :dv]
+        @test names(dat) == ["subj", "item", "n", "dv"]
     end
 
     # different numbers of levels for both_win
@@ -57,6 +57,6 @@ using Test
         @test nrow(dat) == n*subj_n*item_n
         @test length(unique(dat.subj)) == subj_n
         @test length(unique(dat.item)) == item_n
-        @test names(dat) == [:subj, :item, :n, :dv]
+        @test names(dat) == ["subj", "item", "n", "dv"]
     end
 end
