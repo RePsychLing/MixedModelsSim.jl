@@ -9,7 +9,7 @@ subj_btwn = Dict(:age => ["O", "Y"],
 				:pet => ["cat", "dog"])
 item_btwn = Dict(:cond => ["A", "B"])
 both_win = Dict(:time => ["morning", "evening"])
-dat = simdat_crossed(subj_n, item_n, 
+dat = simdat_crossed(StableRNG(42), subj_n, item_n, 
 					 subj_btwn = subj_btwn, 
 					 item_btwn = item_btwn, 
                      both_win = both_win)
@@ -35,5 +35,5 @@ end
     @test ncol(pt) == 2
     @test names(pt) == ["coefname", "power"]
     @test string.(pt.coefname) == collect(string.(zpmt[1][1] |> keys))
-    @test pt.power == [0.2, 0.0, 0.2, 0.1, 0.2]
+    @test pt.power == [0.4, 0.1, 0.2, 0.2, 0.1]
 end

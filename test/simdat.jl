@@ -10,6 +10,8 @@ using Test
                         "pet" => ["cat", "dog"])
         item_btwn = Dict("cond" => ["A", "B"])
         both_win = Dict("time" => ["morning", "evening"])
+        # since we don't inspect the dv here, we don't worry about specifying the RNG
+        # this has the advantage of testing the default/implicit-RNG method
         dat = simdat_crossed(subj_n, item_n, 
                              subj_btwn = subj_btwn, 
                              item_btwn = item_btwn, 
