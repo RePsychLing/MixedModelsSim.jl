@@ -108,7 +108,7 @@ function sim_to_df(sims)
     end
     longtab = stack(tab, 1:(ncol(tab)-2), variable_name = :coefname)
     widetab = unstack(longtab, :var, :value)
-    rename!(widetab, ["coefname", "iteration",  "p",  "se",  "z",  "beta" ])
+    rename!(widetab, ["iteration",  "coefname", "p",  "se",  "z",  "beta" ])
     sort!(widetab, [:iteration])
     select!(widetab, :iteration, :coefname, :beta, :se, :z, :p)
 end

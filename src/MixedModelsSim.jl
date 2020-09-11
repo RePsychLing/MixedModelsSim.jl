@@ -3,6 +3,7 @@ module MixedModelsSim
 using DataFrames
 using MixedModels
 using PooledArrays
+using ProgressMeter
 using Random
 using StaticArrays
 using Statistics
@@ -21,6 +22,8 @@ export
     sim_to_df,
     simdat_crossed
 
+
+include("utilities.jl")
 include("columntable.jl")
 include("power.jl")
 include("simdat.jl")
