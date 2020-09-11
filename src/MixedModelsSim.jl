@@ -1,6 +1,12 @@
 module MixedModelsSim
 
-using DataFrames, PooledArrays, Tables, Statistics
+using DataFrames
+using MixedModels
+using PooledArrays
+using Random
+using StaticArrays
+using Statistics
+
 
 export
     cyclicshift,
