@@ -6,6 +6,7 @@ using PooledArrays
 using Random
 using StaticArrays
 using Statistics
+using Tables
 
 
 export
