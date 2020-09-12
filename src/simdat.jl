@@ -10,11 +10,12 @@ Return a `DataFrame` with a design specified by the:
 * within-subject/item factors (`both_win`)
 
 Factors should be specified as Dicts in the following format:
-
+```julia
 Dict(
     "factor1_name" => ["F1_level1", "F1_level2"],
     "factor2_name" => ["F2_level1", "F2_level2", "F2_level3"]
 )
+```
 """
 function simdata_crossed end
 

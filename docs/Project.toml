@@ -1,5 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+MixedModelsSim = "d5ae56c5-23ca-4a1f-b505-9fc4796fc1fe"
 
 [compat]
 Documenter = "0.23, 0.24, 0.25"
