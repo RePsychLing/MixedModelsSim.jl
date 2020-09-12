@@ -17,8 +17,6 @@ Dict(
 )
 ```
 """
-function simdata_crossed end
-
 function simdat_crossed(subj_n = 1, item_n = 1;
     subj_btwn = nothing, item_btwn = nothing, both_win = nothing)
 
