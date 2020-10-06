@@ -1,4 +1,5 @@
 """
+    simdat_crossed(RNG, subj_n, item_n; subj_btwn, item_btwn, both_win)
     simdat_crossed(subj_n, item_n; subj_btwn, item_btwn, both_win)
 
 Return a `DataFrame` with a design specified by the:
@@ -9,14 +10,24 @@ Return a `DataFrame` with a design specified by the:
 * within-subject/item factors (`both_win`)
 
 Factors should be specified as Dicts in the following format:
-
+```julia
 Dict(
     "factor1_name" => ["F1_level1", "F1_level2"],
     "factor2_name" => ["F2_level1", "F2_level2", "F2_level3"]
 )
+```
 """
-
 function simdat_crossed(subj_n = 1, item_n = 1;
+    subj_btwn = nothing, item_btwn = nothing, both_win = nothing)
+
+
+     simdat_crossed(Random.GLOBAL_RNG, subj_n, item_n;
+                    subj_btwn = subj_btwn, 
+                    item_btwn = item_btwn, 
+                    both_win = both_win)
+end
+
+function simdat_crossed(rng::AbstractRNG, subj_n = 1, item_n = 1;
     subj_btwn = nothing, item_btwn = nothing, both_win = nothing)
 
     # set up subj table
@@ -69,7 +80,7 @@ function simdat_crossed(subj_n = 1, item_n = 1;
     end
 
     # add random numbers as a DV
-    design.dv = randn(nrow(design))
+    design.dv = randn(rng, nrow(design))
 
     design
 
@@ -81,11 +92,10 @@ end
 Returns a `DataFrame` with two columns, `coefname` and `power`, with the proportion of 
 simulated p-values less than alpha, for `sim`, the output of `simulate_waldtests`.
 """
-
 function power_table(sim, alpha = 0.05)
     pvals = DataFrame(columntable(sim).p)
     pvals = stack(pvals) 
-    pwr = by(pvals, :variable, :value => x->mean(x.<alpha) )
+    pwr = combine(groupby(pvals, :variable), :value => x->mean(x.<alpha))
     rename!(pwr, ["coefname", "power"])
 end
 
@@ -97,7 +107,6 @@ Rows are all the coefficients for each iteration of `sim`, the output of `simula
 `iteration` is not guaranteed to be the same across runs of `simulate_waldtests` with the same seed, 
 even though the samples will be.
 """
-
 function sim_to_df(sims)
     tab = DataFrame()
     for (i, sim) in enumerate(sims)
@@ -108,7 +117,7 @@ function sim_to_df(sims)
     end
     longtab = stack(tab, 1:(ncol(tab)-2), variable_name = :coefname)
     widetab = unstack(longtab, :var, :value)
-    rename!(widetab, ["coefname", "iteration",  "p",  "se",  "z",  "beta" ])
+    rename!(widetab, ["iteration",  "coefname", "p",  "se",  "z",  "beta" ])
     sort!(widetab, [:iteration])
     select!(widetab, :iteration, :coefname, :beta, :se, :z, :p)
 end

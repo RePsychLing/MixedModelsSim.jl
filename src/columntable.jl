@@ -37,7 +37,9 @@ julia> DataFrame(factorproduct((item=nlevels(3,'I'),), (subj=nlevels(5), age=["Y
 │ 15  │ I3     │ S5     │ O      │
 ```
 """
-factorproduct(facs...) = vec([merge(s...) for s in Iterators.product(rowtable.(facs)...)])
+function factorproduct(facs...)
+    vec([merge(s...) for s in Iterators.product(rowtable.(facs)...)])
+end
 
 """
     cyclicshift(v::AbstractVector, nrow)
@@ -66,7 +68,9 @@ julia> show(nlevels(10))
 ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10"]
 ```
 """
-nlevels(nlev, tag='S') = string.(tag, lpad.(1:nlev, ndigits(nlev), '0'))
+function nlevels(nlev, tag='S')
+    string.(tag, lpad.(1:nlev, ndigits(nlev), '0'))
+end
 
 """
     pooled!(df::DataFrame, cols::Type=Union{AbstractString,Missing})
@@ -95,4 +99,3 @@ function withinitem(nitem, df; tag = 'I')
     value.item = repeat(PooledArray(nlevels(nitem, tag=tag)), outer=nrow)
     value
 end
-
