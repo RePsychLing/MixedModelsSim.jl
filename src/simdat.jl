@@ -88,9 +88,9 @@ function simdat_crossed(rng::AbstractRNG, subj_n = 1, item_n = 1;
     # cross the subject and item tables
     #design = factorproduct(subj, item) |> DataFrame
     if length(both_btwn_vars) == 0
-        design = join(subj_df, item_df, kind = :cross)
+        design = crossjoin(subj_df, item_df)
     else
-        design = join(subj_df, item_df, on = both_btwn_vars)
+        design = semijoin(subj_df, item_df; on = both_btwn_vars)
     end
 
     if (!isnothing(both_win))
@@ -102,7 +102,7 @@ function simdat_crossed(rng::AbstractRNG, subj_n = 1, item_n = 1;
 
         # cross the subject and item tables with any within factors
         #design = factorproduct(subj, item, win) |> DataFrame
-        design = join(design, DataFrame(win), kind = :cross)
+        design = crossjoin(design, DataFrame(win))
     end
 
     # add random numbers as a DV
