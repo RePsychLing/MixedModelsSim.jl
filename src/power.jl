@@ -1,6 +1,3 @@
-using MixedModels
-using Random, StaticArrays, Tables
-
 """
     simulate_waldtests(rng::AbstractRNG, nsamp::Integer, m::LinearMixedModel;
         β = m.β, σ = m.σ, θ = m.θ, use_threads=false)

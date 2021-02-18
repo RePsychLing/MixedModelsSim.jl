@@ -1,6 +1,14 @@
 module MixedModelsSim
 
-using DataFrames, PooledArrays, Tables, Statistics
+using DataFrames
+using MixedModels
+using PooledArrays
+using ProgressMeter
+using Random
+using StaticArrays
+using Statistics
+using Tables
+
 
 export
     cyclicshift,
@@ -14,6 +22,8 @@ export
     sim_to_df,
     simdat_crossed
 
+
+include("utilities.jl")
 include("columntable.jl")
 include("power.jl")
 include("simdat.jl")

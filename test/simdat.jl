@@ -9,9 +9,11 @@ using Test
     warn_str = "A has levels [\"A\", \"B\", \"C\"] for subj and [\"A\", \"B\"] for item"
     #@test_warn warn_str simdat_crossed(1, 1, subj_btwn = subj_btwn, item_btwn = item_btwn)
 
+    # since we don't inspect the dv here, we don't worry about specifying the RNG
+    # this has the advantage of testing the default/implicit-RNG method
 
-    for subj_n in [1, 5, 10, 20] 
-        for item_n in [1, 5, 10, 20] 
+    for subj_n in [1, 5, 10, 20]
+        for item_n in [1, 5, 10, 20]
             for b in [2, 3, 4, 5]
                 btwn = nlevels(b, "A")
                 subj_btwn = Dict(:A => btwn)
@@ -29,8 +31,8 @@ using Test
         end
     end
 
-    for subj_n in [1, 5, 10, 20] 
-        for item_n in [1, 5, 10, 20] 
+    for subj_n in [1, 5, 10, 20]
+        for item_n in [1, 5, 10, 20]
             for b in [2, 3, 4, 5]
                 btwn = nlevels(b, "A")
                 # Dict keys can be strings or symbols, but have to be consistent
@@ -96,7 +98,7 @@ using Test
         @test nrow(dat) == n*subj_n*item_n
         @test length(unique(dat.subj)) == n*subj_n
         @test length(unique(dat.item)) == item_n
-        @test names(dat) == [:subj, :n, :item, :dv]
+        @test names(dat) == ["subj", "n", "item", "dv"]
     end
 
     # different numbers of levels for item_btwn
@@ -109,7 +111,7 @@ using Test
         @test nrow(dat) == n*subj_n*item_n
         @test length(unique(dat.subj)) == subj_n
         @test length(unique(dat.item)) == n*item_n
-        @test names(dat) == [:subj, :item, :n, :dv]
+        @test names(dat) == ["subj", "item", "n", "dv"]
     end
 
     # different numbers of levels for both_win
@@ -122,7 +124,7 @@ using Test
         @test nrow(dat) == n*subj_n*item_n
         @test length(unique(dat.subj)) == subj_n
         @test length(unique(dat.item)) == item_n
-        @test names(dat) == [:subj, :item, :n, :dv]
+        @test names(dat) == ["subj", "item", "n", "dv"]
     end
 
     for item_prefix in ["I", "item", "my item"]
