@@ -14,11 +14,11 @@ This package provides some utility functions for generating experimental designs
 `MixedModelsSim` is not yet registered in the Julia package registry and must be installed by
 ```julia
 julia> using Pkg
-julia> Pkg.add(PackageSpec(url="https://github.com/RePsychLing/MixedModelsSim.jl"))
+julia> Pkg.add(PackageSpec(url="https://github.com/RePsychLing/MixedModelsSim.jl", rev="v0.1.1"))
 ```
 or, in the pkg REPL,
 ```julia
-(@v1.4) pkg> add https://github.com/RePsychLing/MixedModelsSim.jl
+(@v1.4) pkg> add https://github.com/RePsychLing/MixedModelsSim.jl#v0.1.1
 ```
 
 ## Purpose
@@ -155,4 +155,3 @@ The development of this package was supported by the Center for Interdisciplinar
 
 [T2-img]: https://github.com/JuliaStats/MixedModels.jl/workflows/Tier2/badge.svg
 [T2-url]: https://github.com/JuliaStats/MixedModels.jl/actions?workflow=Tier2
-
