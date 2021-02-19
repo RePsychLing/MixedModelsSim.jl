@@ -1,5 +1,6 @@
 module MixedModelsSim
 
+using LinearAlgebra
 using MixedModels
 using PooledArrays
 using Random
@@ -11,6 +12,7 @@ using MixedModels: replicate
 export
     cyclicshift,
     factorproduct,
+    flatlowertri,
     nlevels,
     #withinitem,
     pooled!,

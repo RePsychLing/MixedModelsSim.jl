@@ -52,12 +52,12 @@ factorproduct(::Val{:columntable}, facs...) = columntable(factorproduct(facs...)
 Return an `eltype(v)` matrix of size `nrow` by `length(v)` with each column consisting
 of `v` followed by a cyclic shift of `v` followed by ...
 
-The return value is used to counterbalance levels of conditions in [`withinitem`](@ref).
 ```@example
 cyclicshift('a':'d', 8)
 ```
 """
 function cyclicshift(v::AbstractVector, nrow)
+    # The return value i used to counterbalance levels of conditions in [`withinitem`](@ref).
     vlen = length(v)
     [v[1 + (i + j) % vlen] for i in 0:(nrow - 1), j in 0:(vlen - 1)]
 end
@@ -104,6 +104,16 @@ function pooled!(df, cols::Type=Union{AbstractString,Missing})
     end
 
     return df
+end
+
+"""
+    flatlowertri(::LowerTriangular)
+
+Returns the lower triangular flattened into 1D array in row-major order.
+"""
+function flatlowertri(l::LowerTriangular)
+    rr, cc = size(l)
+    return [l[i, j] for i = 1:rr for j = 1:i]
 end
 
 
