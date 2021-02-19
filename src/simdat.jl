@@ -1,6 +1,6 @@
 """
-    simdat_crossed(RNG, subj_n, item_n; subj_btwn, item_btwn, both_win)
-    simdat_crossed(subj_n, item_n; subj_btwn, item_btwn, both_win)
+    simdat_crossed([RNG], subj_n, item_n;
+                   subj_btwn=nothing, item_btwn=nothing, both_win=nothing)
 
 Return a `DataFrame` with a design specified by the:
 * number of subjects (`subj_n`),
@@ -21,20 +21,12 @@ Dict(
 ```
 Dict keys can be strings or symbols.
 """
-function simdat_crossed(subj_n = 1, item_n = 1;
-    subj_btwn = nothing, item_btwn = nothing, both_win = nothing,
-    subj_prefix = "S", item_prefix = "I")
+simdat_crossed(args...; kwargs...) = simdat_crossed(Random.GLOBAL_RNG, args...; kwargs...)
 
 
-     simdat_crossed(Random.GLOBAL_RNG, subj_n, item_n;
-                    subj_btwn = subj_btwn,
-                    item_btwn = item_btwn,
-                    both_win = both_win)
-end
-
-function simdat_crossed(rng::AbstractRNG, subj_n = 1, item_n = 1;
-    subj_btwn = nothing, item_btwn = nothing, both_win = nothing,
-    subj_prefix = "S", item_prefix = "I")
+function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
+                        subj_btwn=nothing, item_btwn=nothing, both_win=nothing,
+                        subj_prefix="S", item_prefix="I")
 
     # set up subj table
     if isnothing(subj_btwn)
@@ -50,8 +42,8 @@ function simdat_crossed(rng::AbstractRNG, subj_n = 1, item_n = 1;
         sb_vars = collect(keys(subj_btwn))
     end
 
-    subj_names = Symbol.(vcat(["subj"], sb_vars))
-    subj = NamedTuple{Tuple(subj_names)}(subj_vals)
+    subj_names = [["subj"];  sb_vars]
+    subj = (; (Symbol(k) => v for (k,v) in zip(subj_names, subj_vals))...)
 
     # set up item table
     if isnothing(item_btwn)
@@ -67,11 +59,11 @@ function simdat_crossed(rng::AbstractRNG, subj_n = 1, item_n = 1;
         ib_vars = collect(keys(item_btwn))
     end
 
-    item_names = Symbol.(vcat(["item"], ib_vars))
-    item = NamedTuple{Tuple(item_names)}(item_vals)
+    item_names = [["item"]; ib_vars]
+    item = (; (Symbol(k) => v for (k,v) in zip(item_names, item_vals))...)
 
     # set up within both table
-    both_btwn_vars = Symbol.(intersect(subj_names, item_names))
+    both_btwn_vars = intersect(keys(subj), keys(item))
     subj_df = DataFrame(subj)
     item_df = DataFrame(item)
 
@@ -81,7 +73,7 @@ function simdat_crossed(rng::AbstractRNG, subj_n = 1, item_n = 1;
         unique(item[bb])
         d = setdiff(subj_levels, item_levels)
         if length(d) > 0
-            @warn(string(bb)*" has levels "*string(subj_levels)*" for subj and "*string(item_levels)*" for item")
+            @warn("$(bb) has levels $(subj_levels) for subj and $(item_levels) for item")
         end
     end
 
@@ -98,7 +90,7 @@ function simdat_crossed(rng::AbstractRNG, subj_n = 1, item_n = 1;
         win_prod = Iterators.product(wc...)
         win_vals = columntable(win_prod) |> collect
         win_names = collect(keys(both_win))
-        win = NamedTuple{Tuple(Symbol.(win_names))}(win_vals)
+        win = (; (Symbol(k) => v for (k,v) in zip(win_names, win_vals))...)
 
         # cross the subject and item tables with any within factors
         #design = factorproduct(subj, item, win) |> DataFrame

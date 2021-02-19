@@ -24,7 +24,7 @@ using Test
 
                 @test nrow(dat) == subj_n*item_n*b
                 @test ncol(dat) == 4
-                @test names(dat) == [:subj, :A, :item, :dv]
+                @test propertynames(dat) == [:subj, :A, :item, :dv]
                 @test length(unique(dat.subj)) == subj_n*b
                 @test length(unique(dat.item)) == item_n*b
             end
@@ -44,7 +44,7 @@ using Test
 
                 @test nrow(dat) == subj_n*item_n*b*2
                 @test ncol(dat) == 5
-                @test names(dat) == [:subj, :A, :item, :time, :dv]
+                @test propertynames(dat) == [:subj, :A, :item, :time, :dv]
                 @test length(unique(dat.subj)) == subj_n*b
                 @test length(unique(dat.item)) == item_n*b
             end
@@ -65,7 +65,7 @@ using Test
 
     @test nrow(dat) == 8
     @test ncol(dat) == 6
-    @test names(dat) == [:subj, :B, :A, :age, :item, :dv]
+    @test propertynames(dat) == [:subj, :B, :A, :age, :item, :dv]
     @test dat.A == ["A1", "A1", "A2", "A2", "A1", "A1", "A2", "A2"]
     @test dat.B == ["B1", "B2", "B1", "B2", "B1", "B2", "B1", "B2"]
     @test dat.age == ["O", "O", "O", "O", "Y", "Y", "Y", "Y"]
@@ -84,7 +84,7 @@ using Test
             @test nrow(dat) == 16*subj_n*item_n
             @test length(unique(dat.subj)) == 4*subj_n
             @test length(unique(dat.item)) == 2*item_n
-            @test names(dat) == [:subj, :age, :pet, :item, :cond, :time, :dv]
+            @test propertynames(dat) == [:subj, :age, :pet, :item, :cond, :time, :dv]
         end
     end
 
@@ -98,7 +98,7 @@ using Test
         @test nrow(dat) == n*subj_n*item_n
         @test length(unique(dat.subj)) == n*subj_n
         @test length(unique(dat.item)) == item_n
-        @test names(dat) == ["subj", "n", "item", "dv"]
+        @test propertynames(dat) == ["subj", "n", "item", "dv"]
     end
 
     # different numbers of levels for item_btwn
@@ -111,7 +111,7 @@ using Test
         @test nrow(dat) == n*subj_n*item_n
         @test length(unique(dat.subj)) == subj_n
         @test length(unique(dat.item)) == n*item_n
-        @test names(dat) == ["subj", "item", "n", "dv"]
+        @test propertynames(dat) == ["subj", "item", "n", "dv"]
     end
 
     # different numbers of levels for both_win
@@ -124,7 +124,7 @@ using Test
         @test nrow(dat) == n*subj_n*item_n
         @test length(unique(dat.subj)) == subj_n
         @test length(unique(dat.item)) == item_n
-        @test names(dat) == ["subj", "item", "n", "dv"]
+        @test propertynames(dat) == ["subj", "item", "n", "dv"]
     end
 
     for item_prefix in ["I", "item", "my item"]
