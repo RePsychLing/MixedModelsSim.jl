@@ -28,3 +28,8 @@ end
     @test df.subj isa PooledArray
     @test df.age isa PooledArray
 end
+
+@testset "flatlowertri" begin
+    l = LowerTriangular([1 0 0; 2 3 0; 4 5 6])
+    @test all(flatlowertri(l) .== collect(1:6))
+end
