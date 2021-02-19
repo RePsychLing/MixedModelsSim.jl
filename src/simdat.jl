@@ -2,7 +2,7 @@
     simdat_crossed([RNG], subj_n, item_n;
                    subj_btwn=nothing, item_btwn=nothing, both_win=nothing)
 
-Return a `DataFrame` with a design specified by the:
+Return a row table with a design specified by the:
 * number of subjects (`subj_n`),
 * number of items (`item_n`)
 * between-subject factors (`subj_btwn`)
@@ -12,13 +12,16 @@ Return a `DataFrame` with a design specified by the:
 If a factor is both between-subject and between-item, put it in both
 `subj_btwn` and `item_btwn` with the same keys and the same levels.
 
-Factors should be specified as dictionaries (or named tuples) in the following format:
+Factors should be specified as dictionaries in the following format:
 ```julia
 Dict(
     :factor1_name => ["F1_level1", "F1_level2"],
     :factor2_name => ["F2_level1", "F2_level2", "F2_level3"]
 )
 ```
+
+In addition to design, the rowtable contains a field `dv` pre-populated
+with N(0,1) noise as a basis for further simulating a design.
 """
 simdat_crossed(args...; kwargs...) = simdat_crossed(Random.GLOBAL_RNG, args...; kwargs...)
 
@@ -63,7 +66,7 @@ function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
     # set up within both table
     if (isnothing(both_win))
         # cross the subject and item tables
-        design = factorproduct(subj, item) |> DataFrame
+        design = factorproduct(subj, item)
     else
         wc = values(both_win) |> collect
         win_prod = Iterators.product(wc...)
@@ -72,48 +75,11 @@ function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
         win = (; (Symbol(k) => v for (k,v) in zip(win_names, win_vals))...)
 
         # cross the subject and item tables with any within factors
-        design = factorproduct(subj, item, win) |> DataFrame
+        design = factorproduct(subj, item, win)
     end
 
-    # add random numbers as a DV
-    design.dv = randn(rng, nrow(design))
+    dv = randn(rng, length(design))
+    design = [ merge(dd, (; :dv => vv) ) for (dd, vv) in zip(design, dv) ]
 
     design
-
-end
-
-"""
-    power_table(sim, alpha = 0.05)
-
-Returns a `DataFrame` with two columns, `coefname` and `power`, with the proportion of
-simulated p-values less than alpha, for `sim`, the output of `simulate_waldtests`.
-"""
-function power_table(sim, alpha = 0.05)
-    pvals = DataFrame(columntable(sim).p)
-    pvals = stack(pvals)
-    pwr = combine(groupby(pvals, :variable), :value => x->mean(x.<alpha))
-    rename!(pwr, ["coefname", "power"])
-end
-
-"""
-    sim_to_df(sim)
-
-Returns a `DataFrame` with 6 columns: `iteration`, `coefname`, `beta`, `se`, `z`, `p`.
-Rows are all the coefficients for each iteration of `sim`, the output of `simulate_waldtests`.
-`iteration` is not guaranteed to be the same across runs of `simulate_waldtests` with the same seed,
-even though the samples will be.
-"""
-function sim_to_df(sims)
-    tab = DataFrame()
-    for (i, sim) in enumerate(sims)
-        df = DataFrame(sim)
-        df[!, :iteration] .= i
-        df[!, :var] .= string.(collect(keys(sim)))
-        append!(tab, df)
-    end
-    longtab = stack(tab, 1:(ncol(tab)-2), variable_name = :coefname)
-    widetab = unstack(longtab, :var, :value)
-    rename!(widetab, ["iteration",  "coefname", "p",  "se",  "z",  "beta" ])
-    sort!(widetab, [:iteration])
-    select!(widetab, :iteration, :coefname, :beta, :se, :z, :p)
 end

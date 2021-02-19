@@ -29,6 +29,16 @@ This package uses structures from the [`Tables` package](https://github.com/Juli
 
 For those with experience in [`R`](https://www.r-project.org) just think of a `NamedTuple` as being like R's `list` type.  It's an ordered, named collection.
 
+
+## Changes in v0.2
+
+Version 0.2 brings extensive changes to the API, both to take better advantage of new features in
+MixedModels.jl 3.0 and to eliminate the direct dependency on DataFrames.jl.
+
+- There is now extensive use of row tables instead of DataFrames.
+- `simulate_waldtests` has been removed. This functionality is now provided by the `coefpvalues` property provided of `MixedModelBootstrap`.
+- Similarly, `sim_to_df` has been removed because `DataFrame(bootstrapsim.coefpvalues)` provides the same content.
+
 ## Examples
 
 To create a design with each of five subjects, three old and two young, tested on each of three items, first create the subject table
@@ -46,6 +56,7 @@ julia> rowtable(subject)
  (subj = "S4", age = "Y")
  (subj = "S5", age = "Y")
  ```
+
  then create the design as the product of an item table (defined inline here) and the `subject` table
  ```julia
 julia> design = factorproduct((item = ["I1","I2","I3"],), subject)
@@ -155,4 +166,3 @@ The development of this package was supported by the Center for Interdisciplinar
 
 [T2-img]: https://github.com/JuliaStats/MixedModels.jl/workflows/Tier2/badge.svg
 [T2-url]: https://github.com/JuliaStats/MixedModels.jl/actions?workflow=Tier2
-
