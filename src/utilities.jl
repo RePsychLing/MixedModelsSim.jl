@@ -109,11 +109,11 @@ end
 """
     flatlowertri(::LowerTriangular)
 
-Returns the lower triangular flattened into 1D array in row-major order.
+Returns the lower triangular flattened into 1D array in column-major order.
 """
 function flatlowertri(l::LowerTriangular)
     rr, cc = size(l)
-    return [l[i, j] for i = 1:rr for j = 1:i]
+    return [l[i, j] for j = 1:cc for i = j:rr]
 end
 
 

@@ -123,7 +123,7 @@ Then we'll have the following λ matrices:
 For the actual optimization process, MixedModels.jl actually uses a flattened version of these stored in the θ vector. (More precisely, these λ matrices are derived from the θ vector.)
 
 ```@example Main
-isapprox(m0.θ,  [flatlowertri(m0.λ[1]); flatlowertri(m0.λ[2])]; atol=0.1)
+isapprox(m0.θ,  [flatlowertri(m0.λ[1]); flatlowertri(m0.λ[2])])
 ```
 
 With that in mind, we can assemble our θ vector for simulation:
@@ -131,6 +131,15 @@ With that in mind, we can assemble our θ vector for simulation:
 ```@example Main
 # make sure these are in the same order as in the model summary!
 θ = [flatlowertri(λitem); flatlowertri(λsubj)]
+```
+
+We can check that we got these right by installing these parameter values into the model:
+
+```@example Main
+using MixedModels: updateL!
+m0.θ = θ
+updateL!(m0)
+m0
 ```
 
 ## Assemble the Fixed Effects
