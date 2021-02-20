@@ -7,7 +7,6 @@ First, some setup:
 
 ```@example Main
 using DataFrames
-using LinearAlgebra
 using MixedModels, MixedModelsSim
 using Random
 ```
