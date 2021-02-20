@@ -68,4 +68,9 @@ using Test
         @test length(unique(getproperty.(dat, :item))) == item_n
         @test Set(Tables.columnnames(first(dat))) == Set([:subj, :n, :item, :dv])
     end
+
+    # the nothingness
+    dat = simdat_crossed(1, 1)
+    @test Tables.isrowtable(dat)
+    @test Set(Tables.columnnames(first(dat))) == Set([:subj, :item, :dv])
 end
