@@ -1,5 +1,6 @@
 using DataFrames
 using LinearAlgebra
+using MixedModels
 using MixedModelsSim
 using PooledArrays
 using Tables
