@@ -77,71 +77,57 @@ looks like:
 vc = VarCorr(m0)
 ```
 
-```@example Main
-vc.σρ
-```
+For each grouping variable (subjects and items), there are two major components: the standard deviations ahd the correlations.
 
-In matrix form:
-
-```@example Main
-m0.λ
-```
-
-```@example Main
-m0.λ[1]
-```
-
-```@example Main
-m0.λ[2]
-```
-
-Note that the entries in `m0.λ` are stored in the same order as the random effects are listed in `VarCorr(m0)`.  The off-diagonal elements are covariances and correspond to the correlations (the ρ's).
-The on-diagonal elements are just the standard deviations (the σ's).
 For this example, we'll just assume all the correlations and thus the covariances are 0 in order to make things simple.
-Then we only have to worry about the diagonal elements.
+Then we only have to worry about the standard deviations.
 
 Let's assume that the variability
 - between items
-    - in the intercept is 1.3 times the residual variability
-    - in age is 0.35 times the residual variability
-    - in context is 0.75 times the residual variability
+  - in the intercept is 1.3 times the residual variability
+  - in age is 0.35 times the residual variability
+  - in context is 0.75 times the residual variability
 - between subjects
-    - in the intercept is 1.5 times the residual variability
-    - in frequency is 0.5 times the residual variability
-    - in context is 0.75 times the residual variability
+  - in the intercept is 1.5 times the residual variability
+  - in frequency is 0.5 times the residual variability
+  - in context is 0.75 times the residual variability
 
-Then we'll have the following λ matrices:
+Note these are always specified relative to the residual standard deviation.
+In other words, we think about how big the between-subject and between-item differences are relative to the between-observation differences.
+
+We can now create the associated covariance matrices.[^cholesky]
+
+[^cholesky]: Technically, we're creating the lower Cholesky factor of these matrices, which is a bit like the matrix square root. In other words, we're creating the matrix form of standard deviations instead of the matrix form of the variances.]
 
 ```@example Main
-λitem = LowerTriangular(diagm([1.3, 0.35, 0.75]))
+re_item = create_re(1.3, 0.35, 0.75)
 ```
 
 ```@example Main
-λsubj = LowerTriangular(diagm([1.5, 0.5, 0.75]))
+re_subj = create_re(1.5, 0.5, 0.75)
 ```
 
-For the actual optimization process, MixedModels.jl actually uses a flattened version of these stored in the θ vector. (More precisely, these λ matrices are derived from the θ vector.)
-
+We can check that we got these right by installing these parameter values into the model.
+Note that we have to specify them in the same order as in the output from `VarCorr`.
 ```@example Main
-isapprox(m0.θ,  [flatlowertri(m0.λ[1]); flatlowertri(m0.λ[2])])
-```
-
-With that in mind, we can assemble our θ vector for simulation:
-
-```@example Main
-# make sure these are in the same order as in the model summary!
-θ = [flatlowertri(λitem); flatlowertri(λsubj)]
-```
-
-We can check that we got these right by installing these parameter values into the model:
-
-```@example Main
-update!(m0; θ = θ)
+update!(m0, re_item, re_subj)
 VarCorr(m0)
 ```
 
 Looks good. The values don't exactly match the values in our parameter vector because the
 residual standard deviation isn't exactly 1.0.
+
+For the actual simulation, we'll need the compact form of these covariance matrices that MixedModels.jl stores uses internally.
+This compact form is the parameter vector θ and we can get it back out of the model where we just installed it:
+```@example Main
+θ = m0.θ
+```
+
+Alternatively, we could also create it directly from the covariance matrices we created:
+```@example Main
+vcat( flatlowertri(re_item), flatlowertri(re_subj) )
+```
+
 ## Assemble the Fixed Effects
 
 The last two components we need are the residual variance and the effect sizes for the fixed effects.
