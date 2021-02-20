@@ -119,7 +119,6 @@ end
 
 """
     update!(m::MixedModel; θ)
-    update!(m::GeneralizedLinearMixedModel; θ)
 
 Update the mixed model to use θ as its new parameter vector.
 
@@ -134,6 +133,53 @@ Update the mixed model to use θ as its new parameter vector.
 update!(m::LinearMixedModel; θ) = updateL!(MixedModels.setθ!(m, θ))
 update!(m::GeneralizedLinearMixedModel; θ) = pirls!(MixedModels.setθ!(m, θ), false)
 # arguably type piracy, but we're all the same developers....
+
+
+
+"""
+    update!(m::MixedModel, re...)
+
+Update the mixed model to use the random-effects covariance matrices.
+
+The `re` can be created using [`create_re`](@ref).
+
+They should be specified in the order specified in `VarCorr(m)`.
+
+Details
+========
+The `re` used as the λ fields of the model's `ReTerm`s and should be specified
+as the lower Cholesky factor of covariance matrices.
+"""
+function update!(m::MixedModel, re...)
+    θ = vcat((flatlowertri(rr) for rr in re)...)
+    update!(m; θ=θ)
+end
+
+"""
+    create_re(sigmas...; corrmat=Matrix{Float64}(I, length(sigmas), length(sigmas))
+
+Create the covariance matrix for a random effect from the standard deviations and correlation matrix.
+
+The `sigmas` should be specified in the same order as the random slopes in the
+output of `VarCorr(m)`.
+
+The correlation matrix defaults to the identiy matrix, i.e. no correlation between
+random effects.
+
+!!! note
+    The return value is the lower Cholesky of the covariance matrix, which is what
+    [`update!`](@ref) requires.
+"""
+function create_re(sigmas...; corrmat=nothing)
+    dim = length(sigmas)
+    ss = diagm([sigmas...])
+
+    if isnothing(corrmat)
+        LowerTriangular(ss)
+    else
+        cholesky(ss * corrmat * ss).L
+    end
+end
 
 
 # """

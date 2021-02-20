@@ -10,6 +10,7 @@ using Tables
 using MixedModels: replicate
 
 export
+    create_re,
     cyclicshift,
     factorproduct,
     flatlowertri,
