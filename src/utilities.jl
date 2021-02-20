@@ -131,9 +131,10 @@ Update the mixed model to use θ as its new parameter vector.
 !!! note
     For GLMMs, this only sets θ and not β, even for `fast=false` fits.
 """
-# arguably type piracy, but we're all the same developers....
 update!(m::LinearMixedModel; θ) = updateL!(MixedModels.setθ!(m, θ))
 update!(m::GeneralizedLinearMixedModel; θ) = pirls!(MixedModels.setθ!(m, θ), false)
+# arguably type piracy, but we're all the same developers....
+
 
 # """
 #     withinitem(nitem, df)
