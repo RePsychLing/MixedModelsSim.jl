@@ -17,7 +17,8 @@ export
     #withinitem,
     pooled!,
     power_table,
-    simdat_crossed
+    simdat_crossed,
+    update!
 
 include("utilities.jl")
 include("power.jl")

@@ -136,12 +136,12 @@ With that in mind, we can assemble our θ vector for simulation:
 We can check that we got these right by installing these parameter values into the model:
 
 ```@example Main
-using MixedModels: updateL!
-m0.θ = θ
-updateL!(m0)
-m0
+update!(m0; θ = θ)
+VarCorr(m0)
 ```
 
+Looks good. The values don't exactly match the values in our parameter vector because the
+residual standard deviation isn't exactly 1.0.
 ## Assemble the Fixed Effects
 
 The last two components we need are the residual variance and the effect sizes for the fixed effects.

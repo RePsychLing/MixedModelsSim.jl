@@ -34,3 +34,35 @@ end
     l = LowerTriangular([1 0 0; 2 3 0; 4 5 6])
     @test all(flatlowertri(l) .== [1, 2, 4, 3, 5, 6])
 end
+
+
+@testset "update!" begin
+    @testset "LMM" begin
+        fm1 = fit(MixedModel, @formula(reaction ~ 1 + days + (1 + days|subj)),
+                MixedModels.dataset(:sleepstudy))
+        update!(fm1; θ=[1.0, 0.0, 1.0])
+
+        @test all(values(first(fm1.σs)) .== fm1.σ)
+        @test only(VarCorr(fm1).σρ.subj.ρ) == 0.0
+    end
+
+    @testset "GLMM" begin
+        cbpp = MixedModels.dataset(:cbpp)
+        gm1 = fit(MixedModel, @formula((incid/hsz) ~ 1 + period + (1|herd)), cbpp, Binomial();
+                wts=cbpp.hsz, fast=true)
+
+        β = repeat([-1.], 4)
+        θ = [0.5]
+
+        β₀ = copy(fixef(gm1))
+        update!(gm1; θ=θ)
+        @test all(values(first(gm1.σs)) .== θ)
+        @test all(gm1.β .== β₀)
+
+        refit!(gm1, fast=false)
+        β₀ = copy(fixef(gm1))
+        update!(gm1; θ=θ)
+        @test all(values(first(gm1.σs)) .== θ)
+        @test all(gm1.β .== β₀)
+    end
+end
