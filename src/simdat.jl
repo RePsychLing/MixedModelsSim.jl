@@ -1,6 +1,7 @@
 """
     simdat_crossed([RNG], subj_n, item_n;
-                   subj_btwn=nothing, item_btwn=nothing, both_win=nothing)
+                   subj_btwn=nothing, item_btwn=nothing, both_win=nothing,
+                   subj_prefix="S", item_prefix="I")
 
 Return a row table with a design specified by the:
 * number of subjects (`subj_n`),

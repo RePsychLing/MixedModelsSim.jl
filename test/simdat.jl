@@ -15,9 +15,14 @@ using Test
         dat = simdat_crossed(subj_n, item_n,
                              subj_btwn = subj_btwn,
                              item_btwn = item_btwn,
-                             both_win = both_win)
+                             both_win = both_win,
+                             subj_prefix="SS",
+                             item_prefix="LL")
 
         @test Tables.isrowtable(dat)
+
+        @test first(dat).subj[1:2] == "SS"
+        @test first(dat).item[1:2] == "LL"
 
         @test length(dat) == 16 * subj_n * item_n
         @test length(unique(getproperty.(dat, :subj))) == 4 * subj_n
