@@ -19,5 +19,5 @@ function power_table(sim::MixedModelBootstrap, alpha = 0.05)
             dd[coef] += 1
         end
     end
-    return [ (; :coefname => key, :power => val / nsim) for (key, val) in dd ]
+    return [ (; :coefname => string(key), :power => dd[key] / nsim) for key in keys(first(sim.bstr).β) ]
 end
