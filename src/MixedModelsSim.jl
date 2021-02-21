@@ -1,30 +1,30 @@
 module MixedModelsSim
 
-using DataFrames
+using LinearAlgebra
 using MixedModels
 using PooledArrays
-using ProgressMeter
+using PrettyTables
 using Random
-using StaticArrays
 using Statistics
 using Tables
 
+using MixedModels: replicate
 
 export
+    create_re,
     cyclicshift,
     factorproduct,
-    itemsubjdf,
+    flatlowertri,
     nlevels,
+    #withinitem,
     pooled!,
-    simulate_waldtests,
-    withinitem,
     power_table,
-    sim_to_df,
-    simdat_crossed
+    simdat_crossed,
+    update!
 
+export pretty_table, @pt # re-exports
 
 include("utilities.jl")
-include("columntable.jl")
 include("power.jl")
 include("simdat.jl")
 
