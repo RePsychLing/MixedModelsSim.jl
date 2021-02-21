@@ -42,7 +42,12 @@ design = simdat_crossed(rng, n_subj, n_item;
 ```
 
 Note that `simdat_crossed` returns a row table, which `MixedModels.jl` can process directly.
-For nicely displaying it, we can also convert it to a dataframe and change the factors to use pooled arrays to save a bit of memory.
+For nicely displaying it, we can again use `pretty_table`:
+```@example Main
+pretty_table(first(design, 5))
+```
+
+We can also convert it to a DataFrame and change the factors to use pooled arrays to save a bit of memory.
 
 ```@example Main
 df = pooled!(DataFrame(design))
@@ -160,6 +165,11 @@ Finally, we can turn this into a power table:
 
 ```@example Main
 ptbl = power_table(sim)
+```
+
+For nicely displaying it, we can again use `pretty_table`:
+```@example Main
+pretty_table(ptbl)
 ```
 
 We can of course convert the row table into a DataFrame:

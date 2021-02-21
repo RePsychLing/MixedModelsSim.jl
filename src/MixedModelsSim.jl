@@ -3,6 +3,7 @@ module MixedModelsSim
 using LinearAlgebra
 using MixedModels
 using PooledArrays
+using PrettyTables
 using Random
 using Statistics
 using Tables
@@ -20,6 +21,8 @@ export
     power_table,
     simdat_crossed,
     update!
+
+export pretty_table, @pt # re-exports
 
 include("utilities.jl")
 include("power.jl")
