@@ -23,6 +23,10 @@ Dict(
 
 In addition to design, the rowtable contains a field `dv` pre-populated
 with N(0,1) noise as a basis for further simulating a design.
+
+!!! note
+    The number of subjects/items must divide the number of combinations of between subject/item factor levels.
+    In other words, this function assumes a balanced design and will throw an error if that is not possible.
 """
 simdat_crossed(args...; kwargs...) = simdat_crossed(Random.GLOBAL_RNG, args...; kwargs...)
 
