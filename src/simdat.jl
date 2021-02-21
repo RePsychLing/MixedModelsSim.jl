@@ -36,11 +36,13 @@ function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
         sb_vars = []
     else
         sc = values(subj_btwn) |> collect
-        sc = vcat([nlevels(subj_n)], sc)
+        nlev = prod(length, sc)
+        if mod(subj_n, nlev) != 0
+            throw(ArgumentError("Number of subjects is not a multiple of the number of between-subject levels"))
+        end
         subj_prod = Iterators.product(sc...)
-        subj_total_n = length(subj_prod)
         subj_vals = columntable(subj_prod) |> collect
-        subj_vals[1] = nlevels(subj_total_n, subj_prefix) # rename subjects
+        subj_vals = vcat([nlevels(subj_n, subj_prefix)], repeat.(subj_vals, subj_n ÷ nlev))
         sb_vars = collect(keys(subj_btwn))
     end
 
@@ -53,11 +55,13 @@ function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
         ib_vars = []
     else
         ic = values(item_btwn) |> collect
-        ic = vcat([nlevels(item_n)], ic)
+        nlev = prod(length, ic)
+        if mod(item_n, nlev) != 0
+            throw(ArgumentError("Number of items is not a multiple of the number of between-subject levels"))
+        end
         item_prod = Iterators.product(ic...)
-        item_total_n = length(item_prod)
         item_vals = columntable(item_prod) |> collect
-        item_vals[1] = nlevels(item_total_n, item_prefix) # rename items
+        item_vals = vcat([nlevels(item_n, item_prefix)], repeat.(item_vals, item_n ÷ nlev))
         ib_vars = collect(keys(item_btwn))
     end
 
