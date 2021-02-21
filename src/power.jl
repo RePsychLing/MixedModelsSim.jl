@@ -11,11 +11,12 @@ function power_table(sim::MixedModelBootstrap, alpha = 0.05)
 # q = 1 - alpha
 # se = sqrt(alpha * q / nsim)
     nsim = length(sim.objective)
-    dd = Dict{Symbol, Integer}()
+    # if you don't initialize everything, then coefficents with zero power will be missing
+    dd = Dict(coef => 0 for coef in propertynames(first(sim.bstr).β))
     for row in sim.coefpvalues
         coef = row.coefname
         if row.p < alpha
-            dd[coef] = get(dd, coef, 0) + 1
+            dd[coef] += 1
         end
     end
     return [ (; :coefname => key, :power => val / nsim) for (key, val) in dd ]

@@ -3,8 +3,8 @@ using DataFrames, Tables
 using Statistics
 using Test
 
-subj_n = 10
-item_n = 10
+subj_n = 40
+item_n = 20
 subj_btwn = Dict(:age => ["O", "Y"],
 				 :pet => ["cat", "dog"])
 item_btwn = Dict(:cond => ["A", "B"])
@@ -28,5 +28,5 @@ sim = parametricbootstrap(StableRNG(42), 10, fm1; use_threads=false);
     @test nrow(ptdf) == 5
     @test ncol(ptdf) == 2
     @test names(ptdf) == ["coefname", "power"]
-    @test ptdf.power == [0.4, 0.1, 0.2, 0.2, 0.1]
+    @test ptdf.power == [0.4, 0.2, 0.0, 0.3, 0.1]
 end
