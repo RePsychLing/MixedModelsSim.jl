@@ -1,6 +1,7 @@
 # MixedModelsSim
 
-[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![DOI](https://zenodo.org/badge/210783029.svg)](https://zenodo.org/badge/latestdoi/210783029)
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://RePsychLing.github.io/MixedModelsSim.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://RePsychLing.github.io/MixedModelsSim.jl/dev)
 ![T1-url][T1-img]
@@ -11,14 +12,9 @@ This package provides some utility functions for generating experimental designs
 
 ## Installation
 
-`MixedModelsSim` is not yet registered in the Julia package registry and must be installed by
+`MixedModelsSim` is registered in the Julia package registry and can be installed via the pkg REPL:
 ```julia
-julia> using Pkg
-julia> Pkg.add(PackageSpec(url="https://github.com/RePsychLing/MixedModelsSim.jl"))
-```
-or, in the pkg REPL,
-```julia
-(@v1.4) pkg> add https://github.com/RePsychLing/MixedModelsSim.jl
+(@v1.4) pkg> add MixedModelsSim
 ```
 
 ## Purpose
