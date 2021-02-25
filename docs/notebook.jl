@@ -72,7 +72,7 @@ md"Note that if you go back to the entry field of `sub_n` or `item_n` and change
 md"""
 ## Fitting a model to the inert data
 
-In the `MixedModels` package the formula language is similar to that in the `lme4` package for `R` with the exception that it must be wrapped in a call to the macro `@formula`
+In the `MixedModels` package the formula language is similar to that in the `lme4` package for `R` with the exception that the formula must be wrapped in a call to the macro `@formula`
 """
 
 # ╔═╡ 48e92618-76d1-11eb-053c-e77449325b9c
@@ -90,7 +90,7 @@ As this dependent variable is inert (i.e. simulated from a standard Normal distr
 
 ## Simulated model fits for non-inert data
 
-To simulate responses from non-intert data we must specify values for the parameters in the form of a scalar, `σ`, the standard deviation of the per-observation noise, and two vectors: `β` the fixed-effects parameter vector and `θ` the vector of relative standard deviations.
+To simulate responses from non-intert data we must specify values for the parameters in the form of a scalar, `σ`, the standard deviation of the per-observation noise, and two vectors: `β`, the fixed-effects parameter vector and `θ`, the vector of relative standard deviations.
 
 The fixed-effects parameter is relative to the model matrix, `X`, which, in this case, is the overall mean DV for a typical condition and half the difference between the `hard` and `easy` conditions.  It is half the difference because we use a +/- 1 coding for the `cond` factor, producing a model matrix, `X`, of
 """
@@ -99,10 +99,12 @@ The fixed-effects parameter is relative to the model matrix, `X`, which, in this
 Int.(m0.X')   # convert to integers to save space in the display
 
 # ╔═╡ 9d46c892-76e9-11eb-008e-67d5100eb3fa
-md"Suppose we want an overall mean of 400 ms. and the difference between `hard` and `easy` to be 50 ms., then we would set"
+md"Suppose we set the population mean response time to 400 ms. and the difference between `hard` and `easy` to be 50 ms.
+The β vector is then
+"
 
 # ╔═╡ dbd15424-76e9-11eb-2306-436929c4e756
-β = [400.0, 25.0]   # Note we include the decimal point to force Float64 values
+β = [400.0, 25.0]   # Include the decimal point to force Float64 values
 
 # ╔═╡ fbdfaf02-76e9-11eb-2404-d9a288cf1d31
 md"We also set"
@@ -112,14 +114,72 @@ begin
 	σ  =  25.0  # s.d. of per-observation noise
 	σ₁ = 100.0  # s.d. of random effects for subject
 	σ₂ =  50.0  # s.d. of random effects for item
-	θ = [σ₁, σ₂] ./ σ
+	θ = [σ₁, σ₂] ./ σ  # relative standard deviations
 end;
 
+# ╔═╡ 5d1b6440-7783-11eb-3bae-45d008439b01
+md"""
+To simulate a single response vector from `m0` with these parameters and re-estimate the parameters we use
+"""
+
+# ╔═╡ ac43c242-7783-11eb-17d4-19939f282c52
+simulate!(MersenneTwister(12321), m0; β=β, σ=σ, θ=θ) |> refit!
+
+# ╔═╡ fabb4eae-7783-11eb-13de-157f033b8c12
+md"""
+We see that the estimates of the standard deviations of the random effects and the residual standard deviation are very close to the values used in the simulation: 100.0, 50.0, and 25.0.
+
+The fixed-effects coefficients are also close to those used in the simulation, [400.0, 25.0].
+The standard errors of these estimates indicate that this design and data will have considerable power in testing whether the main effect for `cond` could be zero.
+
+In general we are not interested in the power of a test of whether the `(Intercept)` could be zero.
+We do not expect response times of zero or, even more peculiar, negative response times.
+"""
+
 # ╔═╡ b75c8580-76eb-11eb-2cca-37a0702e44a5
-md"And now simulate a few thousand cases."
+md"""
+## Simulation of many cases
+
+We could repeat this process of `simulate!` and `refit!` to create a collection of parameter estimates and derived statistics but it is easier to use the `parametricbootstrap` function to do this simulation and package the results.
+
+We start the random number generator at the same seed as before so we can check that the individual parameter estimates are as expected.
+
+We will simulate 2000 cases.
+"""
 
 # ╔═╡ cd924f92-76eb-11eb-3275-eb4f55282d5d
-sim = parametricbootstrap(MersenneTwister(12321), 5000, m0; β=β, σ=σ, θ=θ);
+sim = parametricbootstrap(MersenneTwister(12321), 2000, m0; β=β, σ=σ, θ=θ);
+
+# ╔═╡ 91c8aa1a-777c-11eb-0989-45fd3982ce8c
+md"""
+`sim` contains results of the simulation in a compact form with several "properties" defined that allow for extraction of quantities of interest.
+"""
+
+# ╔═╡ 0a8b0560-777d-11eb-2a90-25e0581a9407
+typeof(sim)
+
+# ╔═╡ 10ce3212-777d-11eb-13dd-2b02eaa97ef7
+propertynames(sim)
+
+# ╔═╡ 22151cfa-777d-11eb-2769-75cc409a9902
+md"""
+If, for example, we wanted to plot the p-values for the fixed-effects coefficients, we extract them as
+"""
+
+# ╔═╡ 598ccad6-777d-11eb-3cac-3fcd0f0f3969
+pvals = sim.coefpvalues;
+
+# ╔═╡ 6a6a3e0e-777d-11eb-09f7-99de6d4a20be
+typeof(pvals)
+
+# ╔═╡ 6fe7f0c6-777d-11eb-0d78-dd28ca754de3
+length(pvals)
+
+# ╔═╡ 802d53a4-777d-11eb-25cc-efc4d9dcf292
+pvalscond = last(groupby(select(DataFrame(pvals), :iter, :coefname, :p), :coefname))
+
+# ╔═╡ 49df45ee-7782-11eb-2363-d562aa91ca14
+extrema(pvalscond.p)
 
 # ╔═╡ 3f7a0d3e-76ec-11eb-368e-17428098bc72
 ptbl = power_table(sim);
@@ -154,7 +214,19 @@ DataFrame(ptbl)
 # ╠═dbd15424-76e9-11eb-2306-436929c4e756
 # ╟─fbdfaf02-76e9-11eb-2404-d9a288cf1d31
 # ╠═167234ae-76ea-11eb-2589-93a3e6940453
+# ╟─5d1b6440-7783-11eb-3bae-45d008439b01
+# ╠═ac43c242-7783-11eb-17d4-19939f282c52
+# ╟─fabb4eae-7783-11eb-13de-157f033b8c12
 # ╟─b75c8580-76eb-11eb-2cca-37a0702e44a5
 # ╠═cd924f92-76eb-11eb-3275-eb4f55282d5d
+# ╟─91c8aa1a-777c-11eb-0989-45fd3982ce8c
+# ╠═0a8b0560-777d-11eb-2a90-25e0581a9407
+# ╠═10ce3212-777d-11eb-13dd-2b02eaa97ef7
+# ╟─22151cfa-777d-11eb-2769-75cc409a9902
+# ╠═598ccad6-777d-11eb-3cac-3fcd0f0f3969
+# ╠═6a6a3e0e-777d-11eb-09f7-99de6d4a20be
+# ╠═6fe7f0c6-777d-11eb-0d78-dd28ca754de3
+# ╠═802d53a4-777d-11eb-25cc-efc4d9dcf292
+# ╠═49df45ee-7782-11eb-2363-d562aa91ca14
 # ╠═3f7a0d3e-76ec-11eb-368e-17428098bc72
 # ╠═52e23b14-76ec-11eb-1787-01b2cf9888eb
