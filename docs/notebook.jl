@@ -4,8 +4,37 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ cf0362ce-79db-11eb-2a7c-a99c2f313526
+begin   # for display of plots through WGLMakie
+	using JSServe
+	Page()
+end
+
+# ╔═╡ 2ce6c9d0-79dc-11eb-06fe-95b303b87065
+begin
+	using WGLMakie
+end
+
 # ╔═╡ 40bf1d04-76d0-11eb-0d98-cf2945aa3fd4
-using DataFrames, MixedModels, MixedModelsSim, Random
+using AlgebraOfGraphics, DataFrames, MixedModels, MixedModelsSim, Random
+
+# ╔═╡ 5e62eb0a-79ec-11eb-2874-a1551ebb2540
+begin   # set up a clean package environment
+	import Pkg
+	Pkg.activate(mktempdir())
+end
+
+# ╔═╡ 8bdaa230-79ec-11eb-11d0-3b043652d684
+begin   # install the required packages
+	Pkg.add([
+			"JSServe",
+			"WGLMakie",
+			"AlgebraOfGraphics",
+			"DataFrames",
+			"MixedModels",
+			"MixedModelsSim",
+			])
+end
 
 # ╔═╡ 09276d18-76d2-11eb-3b91-b77f2d532e82
 md"""
@@ -18,6 +47,9 @@ This model is then used in a parametric bootstrap simulation with non-inert coef
 
 Begin by loading the packages to be used.
 """
+
+# ╔═╡ 654920fa-79de-11eb-0dbb-15a85e6d3c71
+const AOG = AlgebraOfGraphics;  # short form for expressions like AOG.density
 
 # ╔═╡ 28a121e2-76d3-11eb-0896-43da695be0a4
 md"""
@@ -64,9 +96,6 @@ df = DataFrame(frm)
 
 # ╔═╡ b0202450-76e3-11eb-3218-8bddeed1c50d
 describe(df)
-
-# ╔═╡ 0fce98d0-76e4-11eb-0ed4-430ae7972fce
-md"Note that if you go back to the entry field of `sub_n` or `item_n` and change the value, the other results are automatically updated"
 
 # ╔═╡ 34b8677c-76e4-11eb-1807-9306323a7c9f
 md"""
@@ -161,6 +190,30 @@ typeof(sim)
 # ╔═╡ 10ce3212-777d-11eb-13dd-2b02eaa97ef7
 propertynames(sim)
 
+# ╔═╡ 761e4f92-792d-11eb-2792-8fc2ef350344
+md"""
+A bootstrap sample like this can be used to create confidence intervals on the parameters.
+"""
+
+# ╔═╡ 97789364-792d-11eb-2289-af7b5c20812a
+combine(groupby(DataFrame(sim.allpars), [:type, :group, :names]),
+	:value => shortestcovint => :interval)
+
+# ╔═╡ d31d6872-792d-11eb-1864-2ba47afd2c2f
+md"""
+The name "shortestcovint" is a contraction of _shortest coverage interval_.
+We have simulated responses from the model and extracted the parameter estimates then, for each parameter, find the shortest interval that contains 95% of the parameter values.
+
+If we were doing this in a Bayesian context where we sample from the posterior density, these would be _Highest Posterior Density (HPD)_ intervals.
+
+Here we just regard them as 95% individual confidence intervals on the parameters.
+
+We could also consider a density plot of the estimates of individual parameters.
+"""
+
+# ╔═╡ d6b9b05c-792e-11eb-2672-6bbd417ecef9
+data(sim.β) * mapping(:β; layout_x = :coefname) * AOG.density |> draw
+
 # ╔═╡ 22151cfa-777d-11eb-2769-75cc409a9902
 md"""
 If, for example, we wanted to plot the p-values for the fixed-effects coefficients, we extract them as
@@ -181,15 +234,81 @@ pvalscond = last(groupby(select(DataFrame(pvals), :iter, :coefname, :p), :coefna
 # ╔═╡ 49df45ee-7782-11eb-2363-d562aa91ca14
 extrema(pvalscond.p)
 
-# ╔═╡ 3f7a0d3e-76ec-11eb-368e-17428098bc72
-ptbl = power_table(sim);
+# ╔═╡ 6c74cd86-7928-11eb-1f7f-a3bb10421811
+data(pvalscond) * mapping(:p) * AOG.density() |> draw
 
-# ╔═╡ 52e23b14-76ec-11eb-1787-01b2cf9888eb
-DataFrame(ptbl)
+# ╔═╡ 203b821c-79dd-11eb-2eb0-ebc06dd7e0d5
+md"The _power_ of the z-test at β = 25.0 is the proportion of these p-values that are less than 0.05"
+
+# ╔═╡ 3f7a0d3e-76ec-11eb-368e-17428098bc72
+DataFrame(power_table(sim))  # wrap in DataFrame for display
+
+# ╔═╡ 9622a4f4-79dd-11eb-269c-6dba4d3a708f
+md"""
+To check whether the nominal level of 0.05 for such a test is appropriate we create another simulation with the "true" value of $\beta_1$ set to zero.
+"""
+
+# ╔═╡ ef406a26-79dd-11eb-16fc-ad985d357b0e
+sim1 = parametricbootstrap(MersenneTwister(32123), 2000, m0; σ=σ, θ=θ, β=[400.0,0.0]);
+
+# ╔═╡ 1708c210-79de-11eb-249f-bd0d341cacff
+combine(
+	groupby(DataFrame(sim1.allpars), [:type, :group, :names]),
+	:value => shortestcovint => :interval,
+)
+
+# ╔═╡ 37defa2c-79de-11eb-3932-5d34875a8926
+data(sim1.β) * mapping(:β) * mapping(layout_x = :coefname) * AOG.density |> draw
+
+# ╔═╡ 0b022d3e-79df-11eb-3c67-c91a878166ca
+begin
+	pvals1last = last(groupby(DataFrame(sim1.coefpvalues), :coefname))
+	data(pvals1last) * mapping(:p) * AOG.density |> draw
+end
+
+# ╔═╡ ad5023fc-79df-11eb-1b86-2f8e770e8489
+md"""
+This shape is a good sign because the simulated p-values should have a uniform [0, 1] distribution under the null hypothesis.
+
+A better check than a density plot, which suffers from "edge effects" on a finite range, is a histogram or a quantile-quantile plot versus the $\mathcal{U}[0,1]$ distribution.
+"""
+
+# ╔═╡ b4fc6398-79e1-11eb-2f58-e546d806fe3e
+data(pvals1last) * mapping(:p) * AOG.histogram |> draw
+
+# ╔═╡ f0d2fa88-79e1-11eb-1b84-3116cdcac338
+data((observed = sort(pvals1last.p), expected = inv(4000):inv(2000):1)) * mapping(:observed, :expected) * visual(:QQPlot) |> draw
+
+# ╔═╡ 3651a920-79e8-11eb-080e-49db3336a2fa
+md"""
+Finally, the observed power for the test of $H_0: \beta_1=0$ versus $H_1: \beta_1\ne0$ should be close to 0.05.
+"""
+
+# ╔═╡ 73e34db6-79e8-11eb-261d-878e68e4cfb1
+DataFrame(power_table(sim1))
+
+# ╔═╡ 91e30ad6-79e8-11eb-24af-91147d0ddbb6
+md"""
+## Summary
+
+Determining power and related quantities associated with an experimental design is performed in the following steps:
+
+1. Specify the number of subjects, the number of items, and the names and levels of any between-subject, between-item and within-subject and item experimental factors.
+2. Create the design table using `simdat_crossed`.  A random number generator (rng) can be specified at this point but is not important because the response, `dv`, is _inert_ in this table.
+3. Specify the model formula from which to simulate and create that model.  Recall that the contrasts for the experimental factors are specified in the call to `LinearMixedModel`.
+4. At this point it is a good idea to examine the model matrix for the fixed-effects parameters using, e.g. `Int.(m0.X')` to ensure that the contrasts are coded as expected.
+5. Determine the values of β, σ and θ for the simulation and obtain the simulation object using `parametricbootstrap`.
+6. Perform various diagnostic plots and examine the `power_table` output.
+"""
 
 # ╔═╡ Cell order:
+# ╠═5e62eb0a-79ec-11eb-2874-a1551ebb2540
+# ╠═8bdaa230-79ec-11eb-11d0-3b043652d684
+# ╟─cf0362ce-79db-11eb-2a7c-a99c2f313526
+# ╟─2ce6c9d0-79dc-11eb-06fe-95b303b87065
 # ╟─09276d18-76d2-11eb-3b91-b77f2d532e82
 # ╠═40bf1d04-76d0-11eb-0d98-cf2945aa3fd4
+# ╠═654920fa-79de-11eb-0dbb-15a85e6d3c71
 # ╟─28a121e2-76d3-11eb-0896-43da695be0a4
 # ╠═b64a889c-76d0-11eb-1936-5545db219def
 # ╟─ce3be2ec-76e0-11eb-3fb5-67bd31816bca
@@ -203,7 +322,6 @@ DataFrame(ptbl)
 # ╟─6914997e-76e3-11eb-2f2b-0501a82bee66
 # ╠═9f327062-76e3-11eb-16dc-7be3a2b1c09f
 # ╠═b0202450-76e3-11eb-3218-8bddeed1c50d
-# ╟─0fce98d0-76e4-11eb-0ed4-430ae7972fce
 # ╟─34b8677c-76e4-11eb-1807-9306323a7c9f
 # ╠═48e92618-76d1-11eb-053c-e77449325b9c
 # ╟─7292d5fa-76e4-11eb-243f-8f7ad404d683
@@ -222,11 +340,27 @@ DataFrame(ptbl)
 # ╟─91c8aa1a-777c-11eb-0989-45fd3982ce8c
 # ╠═0a8b0560-777d-11eb-2a90-25e0581a9407
 # ╠═10ce3212-777d-11eb-13dd-2b02eaa97ef7
+# ╟─761e4f92-792d-11eb-2792-8fc2ef350344
+# ╠═97789364-792d-11eb-2289-af7b5c20812a
+# ╟─d31d6872-792d-11eb-1864-2ba47afd2c2f
+# ╠═d6b9b05c-792e-11eb-2672-6bbd417ecef9
 # ╟─22151cfa-777d-11eb-2769-75cc409a9902
 # ╠═598ccad6-777d-11eb-3cac-3fcd0f0f3969
 # ╠═6a6a3e0e-777d-11eb-09f7-99de6d4a20be
 # ╠═6fe7f0c6-777d-11eb-0d78-dd28ca754de3
 # ╠═802d53a4-777d-11eb-25cc-efc4d9dcf292
 # ╠═49df45ee-7782-11eb-2363-d562aa91ca14
+# ╠═6c74cd86-7928-11eb-1f7f-a3bb10421811
+# ╟─203b821c-79dd-11eb-2eb0-ebc06dd7e0d5
 # ╠═3f7a0d3e-76ec-11eb-368e-17428098bc72
-# ╠═52e23b14-76ec-11eb-1787-01b2cf9888eb
+# ╟─9622a4f4-79dd-11eb-269c-6dba4d3a708f
+# ╠═ef406a26-79dd-11eb-16fc-ad985d357b0e
+# ╠═1708c210-79de-11eb-249f-bd0d341cacff
+# ╠═37defa2c-79de-11eb-3932-5d34875a8926
+# ╠═0b022d3e-79df-11eb-3c67-c91a878166ca
+# ╟─ad5023fc-79df-11eb-1b86-2f8e770e8489
+# ╠═b4fc6398-79e1-11eb-2f58-e546d806fe3e
+# ╠═f0d2fa88-79e1-11eb-1b84-3116cdcac338
+# ╟─3651a920-79e8-11eb-080e-49db3336a2fa
+# ╠═73e34db6-79e8-11eb-261d-878e68e4cfb1
+# ╟─91e30ad6-79e8-11eb-24af-91147d0ddbb6
