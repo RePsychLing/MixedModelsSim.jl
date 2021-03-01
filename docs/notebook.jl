@@ -277,7 +277,7 @@ A better check than a density plot, which suffers from "edge effects" on a finit
 data(pvals1last) * mapping(:p) * AOG.histogram |> draw
 
 # ╔═╡ f0d2fa88-79e1-11eb-1b84-3116cdcac338
-data((observed = sort(pvals1last.p), expected = inv(4000):inv(2000):1)) * mapping(:observed, :expected) * visual(:QQPlot) |> draw
+data((observed = sort(pvals1last.p), expected = collect(inv(4000):inv(2000):1))) * mapping(:observed, :expected) * visual(:QQPlot) |> draw
 
 # ╔═╡ 3651a920-79e8-11eb-080e-49db3336a2fa
 md"""
