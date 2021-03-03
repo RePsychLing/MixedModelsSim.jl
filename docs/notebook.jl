@@ -11,9 +11,7 @@ begin   # for display of plots through WGLMakie
 end
 
 # ╔═╡ 2ce6c9d0-79dc-11eb-06fe-95b303b87065
-begin
-	using WGLMakie
-end
+using WGLMakie
 
 # ╔═╡ 40bf1d04-76d0-11eb-0d98-cf2945aa3fd4
 using AlgebraOfGraphics, DataFrames, MixedModels, MixedModelsSim, Random
@@ -22,18 +20,14 @@ using AlgebraOfGraphics, DataFrames, MixedModels, MixedModelsSim, Random
 begin   # set up a clean package environment
 	import Pkg
 	Pkg.activate(mktempdir())
-end
-
-# ╔═╡ 8bdaa230-79ec-11eb-11d0-3b043652d684
-begin   # install the required packages
 	Pkg.add([
-			"JSServe",
-			"WGLMakie",
-			"AlgebraOfGraphics",
-			"DataFrames",
-			"MixedModels",
-			"MixedModelsSim",
-			])
+		"JSServe",
+		"WGLMakie",
+		"AlgebraOfGraphics",
+		"DataFrames",
+		"MixedModels",
+		"MixedModelsSim",
+		])
 end
 
 # ╔═╡ 09276d18-76d2-11eb-3b91-b77f2d532e82
@@ -235,7 +229,7 @@ pvalscond = last(groupby(select(DataFrame(pvals), :iter, :coefname, :p), :coefna
 extrema(pvalscond.p)
 
 # ╔═╡ 6c74cd86-7928-11eb-1f7f-a3bb10421811
-data(pvalscond) * mapping(:p) * AOG.density() |> draw
+data(pvalscond) * mapping(:p) * AOG.density |> draw
 
 # ╔═╡ 203b821c-79dd-11eb-2eb0-ebc06dd7e0d5
 md"The _power_ of the z-test at β = 25.0 is the proportion of these p-values that are less than 0.05"
@@ -303,9 +297,8 @@ Determining power and related quantities associated with an experimental design 
 
 # ╔═╡ Cell order:
 # ╠═5e62eb0a-79ec-11eb-2874-a1551ebb2540
-# ╠═8bdaa230-79ec-11eb-11d0-3b043652d684
-# ╟─cf0362ce-79db-11eb-2a7c-a99c2f313526
-# ╟─2ce6c9d0-79dc-11eb-06fe-95b303b87065
+# ╠═cf0362ce-79db-11eb-2a7c-a99c2f313526
+# ╠═2ce6c9d0-79dc-11eb-06fe-95b303b87065
 # ╟─09276d18-76d2-11eb-3b91-b77f2d532e82
 # ╠═40bf1d04-76d0-11eb-0d98-cf2945aa3fd4
 # ╠═654920fa-79de-11eb-0dbb-15a85e6d3c71
