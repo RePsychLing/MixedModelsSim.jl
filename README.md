@@ -14,7 +14,7 @@ This package provides some utility functions for generating experimental designs
 
 `MixedModelsSim` is registered in the Julia package registry and can be installed via the pkg REPL:
 ```julia
-(@v1.4) pkg> add MixedModelsSim
+(@v1.5) pkg> add MixedModelsSim
 ```
 
 ## Purpose

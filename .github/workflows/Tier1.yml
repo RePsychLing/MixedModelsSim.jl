@@ -36,8 +36,3 @@ jobs:
         if: startsWith(matrix.os, 'Ubuntu')
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - uses: julia-actions/julia-docdeploy@releases/v1
-        if: startsWith(matrix.os, 'Ubuntu')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
