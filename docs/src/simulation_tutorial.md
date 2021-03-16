@@ -109,9 +109,6 @@ nrow(df)
 
 The dataframe df has 9000 rows: 9 parameters, in 1000 iterations.
 
-TODO: NEED HELP: is there a facet_wrap function in Gadfly? 
-========
-
 Plot some bootstrapped parameter:
 ```@example Main
 σres = @where(df, :type .== "σ", :group .== "residual").value
@@ -149,11 +146,8 @@ The function `power_table()` from `MixedModelsSim` takes the output of `parametr
 You can set the `alpha` argument to change the default value of 0.05 (justify your alpha ;).
 
 ```@example Main
-ptbl = power_table(kb07_sim)
+ptbl = power_table(kb07_sim, 0.05)
 ```
-
-TODO:  NEED HELP, alpha doesnt work anymore? Is it still possible to specify significance level?
-=========
 
 A powervalue of 1 maens that in every iteration the spefific parameter we are looking at was below our alpha.
 A powervalue of 0.5 means that in half of our iterations the spefific parameter we are looking at was below our alpha.
@@ -260,32 +254,26 @@ See the two inner values:
 kb07_m.θ
 ```
 
-TODO: NEED HELP HERE, IS THEIR ANY WAY TO DEFINE VARIANCE-COVARIANCE MATRIX YET ?
-=========
-<!---
-vc = VarCorr(kb07_m)
-vc.σρ
-kb07_m.λ
-kb07_m.λ[1]
-kb07_m.λ[2]
+Play with theta
+```@example Main
+kb07_m2 = kb07_m
+update!(kb07_m2, re_item, re_subj)
+```
 
-
-λitem = LowerTriangular(diagm([1.3, 0.35, 0.75]))
-λsubj = LowerTriangular(diagm([1.5, 0.5, 0.75]))
-
-isapprox(kb07_m.θ,  [flatlowertri(kb07_m.λ[1]); flatlowertri(kb07_m.λ[2])])
-
-[flatlowertri(λitem); flatlowertri(λsubj)]
-
-
-# make a lower triangular matricis
-re_item = create_re(0.5363168233715857,0)
-re_item[4]=0.37133693708531357
+make a lower triangular matrix
+```@example Main
+re_item = create_re(0.5363168233715857,0.37133693708531357)
+re_item[2]=-0.70
+re_item
 
 re_subj = create_re(0.4382528181348316)
-# make the compact form out of it = is equal to θ 
-vcat( flatlowertri(re_item), flatlowertri(re_subj) )
---->
+```
+
+make the compact form out of it = is equal to θ
+```@example Main
+newθ= vcat( flatlowertri(re_item), flatlowertri(re_subj) )
+```
+
 
 ## *A simple example*
 
