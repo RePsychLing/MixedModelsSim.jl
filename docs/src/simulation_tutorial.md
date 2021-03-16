@@ -254,23 +254,22 @@ See the two inner values:
 kb07_m.θ
 ```
 
-Play with theta
+### Play with theta
 ```@example Main
 kb07_m2 = kb07_m
 update!(kb07_m2, re_item, re_subj)
-```
 
-make a lower triangular matrix
-```@example Main
+
+# make a lower triangular matrix
+
 re_item = create_re(0.5363168233715857,0.37133693708531357)
 re_item[2]=-0.70
 re_item
 
 re_subj = create_re(0.4382528181348316)
-```
+
 
 make the compact form out of it = is equal to θ
-```@example Main
 newθ= vcat( flatlowertri(re_item), flatlowertri(re_subj) )
 ```
 
@@ -282,8 +281,6 @@ Having this knowledge about the parameters we can now **simulate data from scrat
 The `simdat_crossed()` function from `MixedModelsSim` lets you set up a data frame with a specified experimental design.
 For now, it only makes fully balanced crossed designs!, but you can generate an unbalanced design by simulating data for the largest cell and deleting extra rows.
 
-TODO: NEED HELP: is that still right? I think it is possible now to make partially crossed designs? 
-===========
 
 Firstly we will set an easy design where `subj_n` subjects per `age` group (O or Y) respond to `item_n` items in each of two `condition`s (A or B).
 
@@ -400,6 +397,26 @@ item_btwn = nothing
 both_win = Dict("spkr" => ["old", "new"],
                 "prec" => ["maintain", "break"],
                 "load" => ["yes", "no"]);
+```
+
+### Play with simdat_crossed 
+```@example Main
+subj_btwn = Dict("spkr" => ["old", "new"],
+                "prec" => ["maintain", "break"],
+                "load" => ["yes", "no"]);
+item_btwn = nothing
+both_win = nothing;
+
+subj_n = 56
+item_n = 32
+
+fake_kb07 = simdat_crossed(subj_n, item_n,
+                     subj_btwn = subj_btwn,
+                     item_btwn = item_btwn,
+                     both_win = both_win);
+
+
+fake_kb07_df = DataFrame(fake_kb07)
 ```
 
 Simulate data:
