@@ -4,25 +4,15 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ cf0362ce-79db-11eb-2a7c-a99c2f313526
-begin   # for display of plots through WGLMakie
-	using JSServe
-	Page()
-end
-
-# ╔═╡ 2ce6c9d0-79dc-11eb-06fe-95b303b87065
-using WGLMakie
-
 # ╔═╡ 40bf1d04-76d0-11eb-0d98-cf2945aa3fd4
-using AlgebraOfGraphics, DataFrames, MixedModels, MixedModelsSim, Random
+using AlgebraOfGraphics, CairoMakie, DataFrames, MixedModels, MixedModelsSim, Random
 
 # ╔═╡ 5e62eb0a-79ec-11eb-2874-a1551ebb2540
 begin   # set up a clean package environment
 	import Pkg
 	Pkg.activate(mktempdir())
 	Pkg.add([
-		"JSServe",
-		"WGLMakie",
+		"CairoMakie",
 		"AlgebraOfGraphics",
 		"DataFrames",
 		"MixedModels",
@@ -297,8 +287,6 @@ Determining power and related quantities associated with an experimental design 
 
 # ╔═╡ Cell order:
 # ╠═5e62eb0a-79ec-11eb-2874-a1551ebb2540
-# ╠═cf0362ce-79db-11eb-2a7c-a99c2f313526
-# ╠═2ce6c9d0-79dc-11eb-06fe-95b303b87065
 # ╟─09276d18-76d2-11eb-3b91-b77f2d532e82
 # ╠═40bf1d04-76d0-11eb-0d98-cf2945aa3fd4
 # ╠═654920fa-79de-11eb-0dbb-15a85e6d3c71
