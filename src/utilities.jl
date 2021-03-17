@@ -177,7 +177,7 @@ function create_re(sigmas...; corrmat=nothing)
     if isnothing(corrmat)
         LowerTriangular(ss)
     else
-        cholesky(ss * corrmat * ss).L
+        cholesky(Symmetric(ss * corrmat * ss)).L
     end
 end
 
