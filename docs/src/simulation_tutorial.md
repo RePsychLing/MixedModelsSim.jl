@@ -5,7 +5,7 @@ This tutorial demonstrates how to conduct power analyses and data simulation usi
 
 Power analysis is an important tool for planning an experimental design. Here we show how to
 1. Take existing data and calculate power by simulate new data with bootstrapping.
-2. Adapt parameters in a given Linear Mixed Model to analyze power without changing the existing data set. 
+2. Adapt parameters in a given Linear Mixed Model to analyze power without changing the existing data set.
 3. Create a (simple) fully crossed dataset from scratch and analyze power.
 4. Recreate a more complex dataset from scratch and analyze power for specific model parameter but various sample sizes.
 
@@ -18,7 +18,7 @@ First, here are the packages needed in this example.
 ```@example Main
 using MixedModels        # run mixed models
 using MixedModelsSim     # simulation functions for mixed models
-using RCall              # call R functions from inside Julia
+#using RCall              # call R functions from inside Julia
 using DataFrames, Tables # work with data tables
 using StableRNGs         # random number generator
 using CSV                # write CSV files
@@ -26,9 +26,6 @@ using Markdown
 using Statistics         # basic math funcions
 using DataFramesMeta     # dplyr-like operations
 using Gadfly             # plotting package
-
-using LinearAlgebra      # not used yet, for specifing θ
-
 ```
 
 ### Define number of iterations
@@ -55,7 +52,7 @@ We have to load the data and define some characteristics like the contrasts and 
 
 Load existing data:
 ```@example Main
-kb07 = MixedModels.dataset("kb07");
+kb07 = MixedModels.dataset(:kb07);
 ```
 
 Set contrasts:
@@ -72,8 +69,7 @@ kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
 
 Fit the model
 ```@example Main
-kb07_m = fit(MixedModel, kb07_f, kb07, contrasts=contrasts);
-print(kb07_m)
+kb07_m = fit(MixedModel, kb07_f, kb07; contrasts=contrasts)
 ```
 
 ## **1.2 Simulate from existing data with same model parameters**
@@ -95,11 +91,11 @@ rng = StableRNG(42);
 
 Run nsims iterations:
 ```@example Main
-kb07_sim = parametricbootstrap(rng, nsims, kb07_m, use_threads = false);
+kb07_sim = parametricbootstrap(rng, nsims, kb07_m; use_threads = false);
 ```
 **Try**: Run the code above with or without `use_threads = true`.
 
-The output DataFrame `kb07_sim` contains the results of the bootstrapping procedure. 
+The output DataFrame `kb07_sim` contains the results of the bootstrapping procedure.
 
 ```@example Main
 df = DataFrame(kb07_sim.allpars);
@@ -130,12 +126,12 @@ plot(x = βLoad, Geom.density, Guide.xlabel("Parametric bootstrap estimates of �
 Convert p-values to dataframe and save it as CSV
 ```@example Main
 kb07_sim_df = DataFrame(kb07_sim.coefpvalues);
-CSV.write("kb07_sim.csv", kb07_sim_df);
+# CSV.write("kb07_sim.csv", kb07_sim_df); # don't actually write out to disk in docs :)
 ```
 
-Have a look at your simluated data:
+Have a look at your simulated data:
 ```@example Main
-print(first(kb07_sim_df, 8))
+first(kb07_sim_df, 8)
 ```
 
 Now that we have a bootstrapped data, we can start our power calculation.
@@ -149,15 +145,15 @@ You can set the `alpha` argument to change the default value of 0.05 (justify yo
 ptbl = power_table(kb07_sim, 0.05)
 ```
 
-A powervalue of 1 maens that in every iteration the spefific parameter we are looking at was below our alpha.
-A powervalue of 0.5 means that in half of our iterations the spefific parameter we are looking at was below our alpha.
+An estimated power of 1 means that in every iteration the specific parameter we are looking at was below our alpha.
+An estimated power of 0.5 means that in half of our iterations the specific parameter we are looking at was below our alpha.
 
 You can also do it manually:
 ```@example Main
 kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"),:]
 
 mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"),:p] .< 0.05)
-````
+```
 
 For nicely displaying, you can use `pretty_table`:
 ```@example Main
@@ -184,7 +180,7 @@ new_beta[2:4] = kb07_m.β[2:4]/2
 
 Run nsims iterations:
 ```@example Main
-kb07_sim_half = parametricbootstrap(rng, nsims, kb07_m, β = new_beta, use_threads = false);
+kb07_sim_half = parametricbootstrap(rng, nsims, kb07_m; β = new_beta, use_threads = false);
 ```
 
 ### Power calculation
@@ -220,7 +216,7 @@ kb07_m.σ
 ```
 
 ### **Theta**
-The meaning of `θ` is a bit less intuitive. In a less complex model (one that only has intercepts for the random effects) or if we supress the correlations in the formula with `zerocorr()` then `θ` describes the relationship between the random effects standard deviation and the standard deviation of the residual term.
+The meaning of `θ` is a bit less intuitive. In a less complex model (one that only has intercepts for the random effects) or if we suppress the correlations in the formula with `zerocorr()` then `θ` describes the relationship between the random effects standard deviation and the standard deviation of the residual term.
 In our `kb07_m` example:
 The residual standard deviation is `680.032`.
 The standard deviation of our first variance component *`item - (Intercept)`* is `364.713`.
@@ -400,7 +396,7 @@ both_win = Dict("spkr" => ["old", "new"],
                 "load" => ["yes", "no"]);
 ```
 
-### Play with simdat_crossed 
+### Play with simdat_crossed
 ```@example Main
 subj_btwn = Dict("spkr" => ["old", "new"],
                 "prec" => ["maintain", "break"],
@@ -650,7 +646,7 @@ Our dataframe `d` now contains the power information for each combination of sub
 
 Save the powertable as CSV
 ```@example Main
-CSV.write("power.csv", d)
+# CSV.write("power.csv", d)
 ```
 
 TODO: NEED Help: it would be nice to make a plot of this!
@@ -670,7 +666,6 @@ using StatsPlots
     m = (0.5, [:cross :hex :star7], 12),
     bg = RGB(0.2, 0.2, 0.2)
 )
-
 ```
 
 # Credit
