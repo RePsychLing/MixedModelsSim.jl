@@ -256,21 +256,22 @@ kb07_m.θ
 
 ### Play with theta
 ```@example Main
-kb07_m2 = kb07_m
-update!(kb07_m2, re_item, re_subj)
+# if you don't do a deepcopy, then you just have two names for the same model
+# instead of a (full) copy
+kb07_m2 = deepcopy(kb07_m)
 
+# the diagonal is always 1 because everything is perfectly correlated with itself
+# the elements below the diagonal follow the same form as the `Corr.` entries
+# in the output of VarCorr
+# the elements above the diagonal are just a mirror image
+re_item_corr = [1.0 -0.7; -0.7 1.0]
 
-# make a lower triangular matrix
-
-re_item = create_re(0.5363168233715857,0.37133693708531357)
-re_item[2]=-0.70
+re_item = create_re(0.5363168233715857,0.37133693708531357; corrmat=re_item_corr)
 re_item
 
 re_subj = create_re(0.4382528181348316)
 
-
-make the compact form out of it = is equal to θ
-newθ= vcat( flatlowertri(re_item), flatlowertri(re_subj) )
+update!(kb07_m2, re_item, re_subj)
 ```
 
 
