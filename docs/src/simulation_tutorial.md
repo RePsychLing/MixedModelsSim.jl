@@ -35,7 +35,7 @@ using LinearAlgebra      # not used yet, for specifing θ
 Here we define how many model simulations we want to do. A large number will give more reliable results, but will take longer to compute. It is useful to set it to a low number for testing, and increase it for your final analysis.
 
 ```@example Main
-nsims = 1000
+nsims = 500
 ```
 
 # 1. Take existing data and calculate power by simulate new data with bootstrapping.
@@ -107,7 +107,7 @@ first(df, 9)
 nrow(df)
 ```
 
-The dataframe df has 9000 rows: 9 parameters, in 1000 iterations.
+The dataframe df has 4500 rows: 9 parameters, each from 500 iterations.
 
 Plot some bootstrapped parameter:
 ```@example Main
