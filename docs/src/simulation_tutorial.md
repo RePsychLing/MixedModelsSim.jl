@@ -251,6 +251,7 @@ kb07_m.θ
 ```
 
 ### Play with theta
+TODO: explain this section
 ```@example Main
 # if you don't do a deepcopy, then you just have two names for the same model
 # instead of a (full) copy
