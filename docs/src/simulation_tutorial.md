@@ -332,6 +332,8 @@ Define formula:
 ```@example Main
 f1 = @formula dv ~ 1 + age * condition + (1|item) + (1|subj);
 ```
+Note that we did not include condition as random slopes for item and subject. THis is mainly to keep the example simple and to keep the parameter theta easier to understand (see Section 3 for the explanation of theta).
+
 
 Fit the model:
 ```@example Main
