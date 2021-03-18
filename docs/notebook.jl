@@ -5,19 +5,12 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 40bf1d04-76d0-11eb-0d98-cf2945aa3fd4
-using AlgebraOfGraphics, CairoMakie, DataFrames, MixedModels, MixedModelsSim, Random
-
-# ╔═╡ 5e62eb0a-79ec-11eb-2874-a1551ebb2540
-begin   # set up a clean package environment
+begin   # set up the local package environment
 	import Pkg
-	Pkg.activate(mktempdir())
-	Pkg.add([
-		"CairoMakie",
-		"AlgebraOfGraphics",
-		"DataFrames",
-		"MixedModels",
-		"MixedModelsSim",
-		])
+	Pkg.activate(".")
+	Pkg.instantiate()
+	using AlgebraOfGraphics, CairoMakie, DataFrames, MixedModels
+	using MixedModelsSim, Random
 end
 
 # ╔═╡ 09276d18-76d2-11eb-3b91-b77f2d532e82
@@ -286,7 +279,6 @@ Determining power and related quantities associated with an experimental design 
 """
 
 # ╔═╡ Cell order:
-# ╠═5e62eb0a-79ec-11eb-2874-a1551ebb2540
 # ╟─09276d18-76d2-11eb-3b91-b77f2d532e82
 # ╠═40bf1d04-76d0-11eb-0d98-cf2945aa3fd4
 # ╠═654920fa-79de-11eb-0dbb-15a85e6d3c71
