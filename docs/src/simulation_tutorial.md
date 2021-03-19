@@ -6,7 +6,7 @@ This tutorial demonstrates how to conduct power analyses and data simulation usi
 Power analysis is an important tool for planning an experimental design. Here we show how to
 1. Take existing data and calculate power by simulate new data with bootstrapping.
 2. Adapt parameters in a given Linear Mixed Model to analyze power without changing the existing data set.
-3. Create a (simple) fully crossed dataset from scratch and analyze power.
+3. Create a (simple) balanced fully crossed dataset from scratch and analyze power.
 4. Recreate a more complex dataset from scratch and analyze power for specific model parameter but various sample sizes.
 
 
@@ -18,11 +18,10 @@ First, here are the packages needed in this example.
 ```@example Main
 using MixedModels        # run mixed models
 using MixedModelsSim     # simulation functions for mixed models
-#using RCall              # call R functions from inside Julia
 using DataFrames, Tables # work with data tables
 using StableRNGs         # random number generator
 using CSV                # write CSV files
-using Markdown
+#using Markdown
 using Statistics         # basic math funcions
 using DataFramesMeta     # dplyr-like operations
 using Gadfly             # plotting package
@@ -46,7 +45,7 @@ The data we will be using through out this tutorial is a study about how in a co
 
 Objects are presented on a screen while participants listen to instructions to move the objects around. Participants eye movements are tracked.
 The dependent variable is response time, defined as the latency between the onset of the test description and the moment at which the target was selected.
-The independent variables are speaker (old vs. new), precedents (maintain vs. break)  and cognitive load (a secondary memory task).
+The independent variables are speaker (old vs. new), precedents (maintain vs. break) and cognitive load (a secondary memory task).
 
 We have to load the data and define some characteristics like the contrasts and the underlying model.
 
@@ -123,10 +122,9 @@ plot(x = βPrecedents, Geom.density, Guide.xlabel("Parametric bootstrap estimate
 plot(x = βLoad, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β Load"), Guide.ylabel("Density"))
 ```
 
-Convert p-values to dataframe and save it as CSV
+Convert p-values of your fixed-effects parameters to dataframe 
 ```@example Main
 kb07_sim_df = DataFrame(kb07_sim.coefpvalues);
-# CSV.write("kb07_sim.csv", kb07_sim_df); # don't actually write out to disk in docs :)
 ```
 
 Have a look at your simulated data:
@@ -139,7 +137,7 @@ Now that we have a bootstrapped data, we can start our power calculation.
 ### Power calculation
 
 The function `power_table()` from `MixedModelsSim` takes the output of `parametricbootstrap()` and calculates the proportion of simulations where the p-value is less than alpha for each coefficient.
-You can set the `alpha` argument to change the default value of 0.05 (justify your alpha ;).
+You can set the `alpha` argument to change the default value of 0.05 (justify your alpha).
 
 ```@example Main
 ptbl = power_table(kb07_sim, 0.05)
@@ -147,6 +145,7 @@ ptbl = power_table(kb07_sim, 0.05)
 
 An estimated power of 1 means that in every iteration the specific parameter we are looking at was below our alpha.
 An estimated power of 0.5 means that in half of our iterations the specific parameter we are looking at was below our alpha.
+An estimated power of 0 means that for none of our iterations the specific parameter we are looking at was below our alpha.
 
 You can also do it manually:
 ```@example Main
@@ -189,11 +188,12 @@ kb07_sim_half = parametricbootstrap(rng, nsims, kb07_m; β = new_beta, use_threa
 power_table(kb07_sim_half)
 ```
 
-# 3. Create a (simple) fully crossed dataset from scratch and analyze power.
+# 3. Create a (simple) balanced fully crossed dataset from scratch and analyze power.
 
 In some situations, instead of using an existing dataset it may be useful to simulate the data from scratch. This could be the case when the original data is not available but the effect sizes are known. That means that we have to:
 
 a) specify the effect sizes manually
+
 b) manually create an experimental design, according to which data can be simulated
 
 If we simulate data from scratch, aside from subject and item number, we can manipulate the arguments `β`, `σ` and `θ`.
@@ -209,7 +209,7 @@ kb07_m.β
 ```
 
 ### **Sigma**
-`σ` is the residual-standard deviation listed under the variance components.
+`σ` is the `residual`-standard deviation listed under the variance components.
 ```@example Main
 kb07_m
 kb07_m.σ
@@ -218,9 +218,9 @@ kb07_m.σ
 ### **Theta**
 The meaning of `θ` is a bit less intuitive. In a less complex model (one that only has intercepts for the random effects) or if we suppress the correlations in the formula with `zerocorr()` then `θ` describes the relationship between the random effects standard deviation and the standard deviation of the residual term.
 In our `kb07_m` example:
-The residual standard deviation is `680.032`.
+The `residual` standard deviation is `680.032`.
 The standard deviation of our first variance component *`item - (Intercept)`* is `364.713`.
-Thus our first `θ` is the relationship: variance component devided by residual standard deviation
+Thus our first `θ` is the relationship: variance component devided by `residual` standard deviation
 364.713 /  680.032 =  `0.53631`
 
 ```@example Main
@@ -228,48 +228,96 @@ kb07_m.θ
 ```
 
 We also can calculate the `θ` for variance component *`subj - (Intercept)`*.
-The residual standard deviation is `680.032`.
+The `residual` standard deviation is `680.032`.
 The standard deviation of our variance component *`subj - (Intercept)`* is `298.026`.
-Thus, the related θ is the relationship: variance component devided by residual standard deviation
+Thus, the related θ is the relationship: variance component devided by `residual` standard deviation
 298.026 /  680.032 =  `0.438252`
 
 ```@example Main
 kb07_m.θ
 ```
 
-We can not calculate the `θ` for variance component *`item - prec: maintain`* yet, because it includes the correlation of
-*`item - prec: maintain`* and *`item - (Intercept)`*.
+We can not calculate the `θ`s for variance component *`item - prec: maintain`* this way, because it includes the correlation of
+*`item - prec: maintain`* and *`item - (Intercept)`*. But keep in mind that the relation of  *`item - prec: maintain`*-variability (`252.521`)
+and the `residual`-variability (`680.032`) is 252.521  /  680.032 =  `0.3713369`.
+
 The `θ` vector is the flattened version of the variance-covariance matrix - a lowertrinangular matrix.
-The on-diagonal elements are just the standard deviations (the `σ`'s), If all off-diagonal elements are zero, we can use our
+The on-diagonal elements are just the standard deviations (the `σ`'s). If all off-diagonal elements are zero, we can use our
 calculation above. The off-diagonal elements are covariances and correspond to the correlations (the `ρ`'s).
-If they are unequal to zero, as it is in our `kb07`-dataset, we cannot recreate the variance-covariance matrix having the model output.
-We just take it from the model we already fitted
+If they are unequal to zero, as it is in our `kb07`-dataset, one way to get the two missing `θ`-values is to take the values directly from the model we have already fitted.
 
 See the two inner values:
 ```@example Main
 kb07_m.θ
 ```
 
-### Play with theta
-TODO: explain this section
+Another way is to make use of the 'create_re()' function.
+Here you have to define the relation of all random effects variabilities to the variability of the residuals, as shown above,
+and the correlation-matrices.
+
+Lets start by defining the correlation matrix for the `item`-part.
+
+The diagonal is always `1.0` because everything is perfectly correlated with itself.
+The elements below the diagonal follow the same form as the `Corr.` entries in the output of `VarCorr()`. 
+In our example the correlation of
+*`item - prec: maintain`* and *`item - (Intercept)`* is `-0.7`.
+The elements above the diagonal are just a mirror image.
+
 ```@example Main
-# if you don't do a deepcopy, then you just have two names for the same model
-# instead of a (full) copy
-kb07_m2 = deepcopy(kb07_m)
-
-# the diagonal is always 1 because everything is perfectly correlated with itself
-# the elements below the diagonal follow the same form as the `Corr.` entries
-# in the output of VarCorr
-# the elements above the diagonal are just a mirror image
 re_item_corr = [1.0 -0.7; -0.7 1.0]
-
-re_item = create_re(0.5363168233715857,0.37133693708531357; corrmat=re_item_corr)
-re_item
-
-re_subj = create_re(0.4382528181348316)
-
-update!(kb07_m2, re_item, re_subj)
 ```
+
+Now we put together all relations of standard deviations and the correlation-matrix for the `item`-group:
+
+TODO: How is the result called exactly? variance-covariance matrix? 
+
+```@example Main
+re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
+```
+
+Note: Don't be to specific with your values. If you do some rounding errors, you will get the error-message: 
+`PosDefException: matrix is not Hermitian; Cholesky factorization failed.`
+
+But you can extract the exact values like shown below:
+```@example Main
+corr_exact = VarCorr(kb07_m).σρ[1][2][1][1]
+σ_residuals_exact = VarCorr(kb07_m).s
+σ_1_exact = VarCorr(kb07_m).σρ[1][1][1] / residuals_exact
+σ_2_exact = VarCorr(kb07_m).σρ[1][1][2] / residuals_exact
+
+re_item_corr = [1.0 corr_exact; corr_exact 1.0]
+re_item = create_re(σ_1_exact, σ_2_exact; corrmat = re_item_corr)
+```
+
+Lets continue with the `subj`-part.
+
+We haven't any correlation, because we only have one intercept term, but you can give it a `1.0`.
+```@example Main
+re_subj_corr = [1.0]
+```
+Now we put together all relations of standard deviations and the correlation-matrix for the `subj`-group:
+
+TODO: How is the result called exactly? variance-covariance matrix? 
+
+```@example Main
+re_subj = create_re(0.438; corrmat = re_subj_corr)
+```
+
+If you want the exact value you can use
+```@example Main
+σ_3_exact = VarCorr(kb07_m).σρ[2][1][1] / residuals_exact
+re_subj = create_re(σ_3_exact; corrmat = re_subj_corr)
+```
+
+As mentioned above `θ` is the compact form of these covariance matrices:
+```@example Main
+kb07_m.θ = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
+```
+We can install these parameter in the `parametricbootstrap()`-function or in the model like this:
+```@example Main
+update!(kb07_m, re_item, re_subj)
+```
+
 
 
 ## *A simple example*
@@ -283,8 +331,6 @@ For now, it only makes fully balanced crossed designs!, but you can generate an 
 Firstly we will set an easy design where `subj_n` subjects per `age` group (O or Y) respond to `item_n` items in each of two `condition`s (A or B).
 
 Your factors need to be specified separately for between-subject, between-item, and within-subject/item factors using `Dict` with the name of each factor as the keys and vectors with the names of the levels as values.
-
-First we have to define factors in a dict.
 
 We start with the between subject factors:
 ```@example Main
@@ -333,12 +379,13 @@ Define formula:
 ```@example Main
 f1 = @formula dv ~ 1 + age * condition + (1|item) + (1|subj);
 ```
-Note that we did not include condition as random slopes for item and subject. This is mainly to keep the example simple and to keep the parameter theta easier to understand (see Section 3 for the explanation of theta).
+Note that we did not include condition as random slopes for item and subject.
+This is mainly to keep the example simple and to keep the parameter `θ` easier to understand (see Section 3 for the explanation of theta).
 
 
 Fit the model:
 ```@example Main
-m1 = fit(MixedModel, f1, dat, contrasts=contrasts)
+m1 = fit(MixedModel, f1, dat, contrasts=contrasts);
 print(m1)
 ```
 
@@ -429,7 +476,7 @@ fake_kb07 = simdat_crossed(subj_n, item_n,
 
 Make a dataframe:
 ```@example Main
-fake_kb07_df = DataFrame(fake_kb07)
+fake_kb07_df = DataFrame(fake_kb07);
 ```
 
 Have a look:
@@ -437,7 +484,7 @@ Have a look:
 first(fake_kb07_df,8)
 ```
 
-The function `simdat_crossed` generates a fully crossed design.
+The function `simdat_crossed` generates a balanced fully crossed design.
 Unfortunately, our original design is not fully crossed. Every subject saw an image only once, thus in one of eight possible conditions. To simulate that we only keep one of every eight lines.
 
 TODO: NEED HELP, is that correct? or is it possible to do it in simdat_crossed?
@@ -468,12 +515,6 @@ fake_kb07_df= fake_kb07_df[idx, :]
 rename!(fake_kb07_df, :dv => :rt_trunc)
 ```
 
-Write a CSV:
-```@example Main
-CSV.write("fake_kb07_df.csv", fake_kb07_df);
-```
-
-
 Now we can use the simulated data in the same way as above.
 
 Set contrasts:
@@ -503,16 +544,20 @@ Then, again, we specify `β`, `σ`, and `θ`.
 Here we use the values that we found in the model of the existing dataset:
 
 ```@example Main
+#beta
 new_beta = [2181.85, 67.879, -333.791, 78.5904]
 new_beta = kb07_m.β
 
+#sigma
 new_sigma = 680.032
 new_sigma = kb07_m.σ
 
-new_theta = [0.5363168233715857,
-           -0.25981993107379,
-            0.2653016002105174,
-            0.4382528181348316]
+#theta
+re_item_corr = [1.0 -0.7; -0.7 1.0]
+re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
+re_subj_corr = [1.0]
+re_subj = create_re(0.438; corrmat = re_subj_corr)
+new_theta = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
 new_theta = kb07_m.θ
 ```
 
@@ -574,16 +619,20 @@ kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
 
 Specify `β`, `σ`, and `θ`:
 ```@example Main
+#beta
 new_beta = [2181.85, 67.879, -333.791, 78.5904]
 new_beta = kb07_m.β
 
+#sigma
 new_sigma = 680.032
 new_sigma = kb07_m.σ
 
-new_theta = [0.5363168233715857,
-           -0.25981993107379,
-            0.2653016002105174,
-            0.4382528181348316]
+#theta
+re_item_corr = [1.0 -0.7; -0.7 1.0]
+re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
+re_subj_corr = [1.0]
+re_subj = create_re(0.438; corrmat = re_subj_corr)
+new_theta = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
 new_theta = kb07_m.θ
 ```
 
@@ -593,7 +642,7 @@ new_theta = kb07_m.θ
 Define subject and item numbers as arrays:
 ```@example Main
 sub_ns = [20, 30, 40];
-item_ns = [10, 20, 30];
+item_ns = [16, 24, 32];
 ```
 
 Make an emty dataframe:
@@ -646,11 +695,11 @@ end
 ```
 
 Our dataframe `d` now contains the power information for each combination of subjects and items.
-
-Save the powertable as CSV
 ```@example Main
-# CSV.write("power.csv", d)
+print(d)
 ```
+
+
 
 TODO: NEED Help: it would be nice to make a plot of this!
 =========
@@ -674,4 +723,4 @@ using StatsPlots
 # Credit
 This tutorial was conceived for ZiF research and tutorial workshop by Lisa DeBruine (Feb. 2020) presented again by Phillip Alday during the SMLP Summer School (Sep. 2020).
 
-Updated and extended by Lisa Schwetlick & Daniel Backhaus, with the kind help of Phillip Alday,  after changes to the package.
+Updated and extended by Lisa Schwetlick & Daniel Backhaus, with the kind help of Phillip Alday, after changes to the package.
