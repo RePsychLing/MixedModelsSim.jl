@@ -251,11 +251,11 @@ See the two inner values:
 kb07_m.θ
 ```
 
-Another way is to make use of the 'create_re()' function.
+Another way is to make use of the `create_re()` function.
 Here you have to define the relation of all random effects variabilities to the variability of the residuals, as shown above,
 and the correlation-matrices.
 
-Lets start by defining the correlation matrix for the `item`-part.
+Let's start by defining the correlation matrix for the `item`-part.
 
 The diagonal is always `1.0` because everything is perfectly correlated with itself.
 The elements below the diagonal follow the same form as the `Corr.` entries in the output of `VarCorr()`. 
@@ -275,7 +275,7 @@ TODO: How is the result called exactly? variance-covariance matrix?
 re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
 ```
 
-Note: Don't be to specific with your values. If you do some rounding errors, you will get the error-message: 
+Note: Don't be too specific with your values. If there are rounding errors, you will get the error-message: 
 `PosDefException: matrix is not Hermitian; Cholesky factorization failed.`
 
 But you can extract the exact values like shown below:
@@ -289,9 +289,9 @@ re_item_corr = [1.0 corr_exact; corr_exact 1.0]
 re_item = create_re(σ_1_exact, σ_2_exact; corrmat = re_item_corr)
 ```
 
-Lets continue with the `subj`-part.
+Let's continue with the `subj`-part.
 
-We haven't any correlation, because we only have one intercept term, but you can give it a `1.0`.
+We haven't had any correlation, because we only have one intercept term, but you can set it to `1.0`.
 ```@example Main
 re_subj_corr = [1.0]
 ```
