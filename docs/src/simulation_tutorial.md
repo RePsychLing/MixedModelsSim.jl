@@ -274,14 +274,13 @@ This calculates the covariance factorization which is the theta matrix.
 re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
 ```
 
+![Work flow for constructing theta vector](ThetaExplanation.png)
 
-![](ThetaExplanation.png)
-
-
-Note: Don't be too specific with your values in create_re(). If there are rounding errors, you will get the error-message: 
+Note: Don't be too specific with your values in create_re(). If there are rounding errors, you will get the error-message:
 `PosDefException: matrix is not Hermitian; Cholesky factorization failed.`
 
 But you can extract the exact values like shown below:
+
 ```@example Main
 corr_exact = VarCorr(kb07_m).σρ[1][2][1][1]
 σ_residuals_exact = VarCorr(kb07_m).s
