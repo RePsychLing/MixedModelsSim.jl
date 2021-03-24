@@ -6,7 +6,7 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://RePsychLing.github.io/MixedModelsSim.jl/dev)
 ![T1-url][T1-img]
 ![T2-url][T2-img]
-[![Codecov](https://codecov.io/gh/RePsychLing/MixedModelsSim.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/RePsychLing/MixedModelsSim.jl)
+[![Codecov](https://codecov.io/gh/RePsychLing/MixedModelsSim.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/RePsychLing/MixedModelsSim.jl)
 
 This package provides some utility functions for generating experimental designs, especially those with crossed factors.
 
