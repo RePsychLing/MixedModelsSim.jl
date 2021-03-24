@@ -122,7 +122,7 @@ plot(x = βPrecedents, Geom.density, Guide.xlabel("Parametric bootstrap estimate
 plot(x = βLoad, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β Load"), Guide.ylabel("Density"))
 ```
 
-Convert p-values of your fixed-effects parameters to dataframe 
+Convert p-values of your fixed-effects parameters to dataframe
 ```@example Main
 kb07_sim_df = DataFrame(kb07_sim.coefpvalues);
 ```
@@ -188,7 +188,7 @@ kb07_sim_half = parametricbootstrap(rng, nsims, kb07_m; β = new_beta, use_threa
 power_table(kb07_sim_half)
 ```
 
-# 3. Create a (simple) balanced fully crossed dataset from scratch and analyze power.
+## Create a (simple) balanced fully crossed dataset from scratch and analyze power.
 
 In some situations, instead of using an existing dataset it may be useful to simulate the data from scratch. This could be the case when the original data is not available but the effect sizes are known. That means that we have to:
 
@@ -199,7 +199,7 @@ b) manually create an experimental design, according to which data can be simula
 If we simulate data from scratch, aside from subject and item number, we can manipulate the arguments `β`, `σ` and `θ`.
 Lets have a closer look at them, define their meaning and we will see where the corresponding values in the model output are.
 
-### **Beta**
+### Fixed Effects (βs)
 `β` are our effect sizes. If we look again on our LMM summary from the `kb07`-dataset `kb07_m`
 we see our four `β` under fixed-effects parameters in the `Coef.`-column.
 
@@ -208,14 +208,14 @@ kb07_m
 kb07_m.β
 ```
 
-### **Sigma**
+### Residual Variance (σ)
 `σ` is the `residual`-standard deviation listed under the variance components.
 ```@example Main
 kb07_m
 kb07_m.σ
 ```
 
-### **Theta**
+### Random Effects (θ)
 The meaning of `θ` is a bit less intuitive. In a less complex model (one that only has intercepts for the random effects) or if we suppress the correlations in the formula with `zerocorr()` then `θ` describes the relationship between the random effects standard deviation and the standard deviation of the residual term.
 In our `kb07_m` example:
 The `residual` standard deviation is `680.032`.
@@ -258,7 +258,7 @@ and the correlation-matrices.
 Let's start by defining the correlation matrix for the `item`-part.
 
 The diagonal is always `1.0` because everything is perfectly correlated with itself.
-The elements below the diagonal follow the same form as the `Corr.` entries in the output of `VarCorr()`. 
+The elements below the diagonal follow the same form as the `Corr.` entries in the output of `VarCorr()`.
 In our example the correlation of
 *`item - prec: maintain`* and *`item - (Intercept)`* is `-0.7`.
 The elements above the diagonal are just a mirror image.
@@ -328,7 +328,7 @@ update!(kb07_m, re_item, re_subj)
 
 
 
-## *A simple example*
+## A simple example from scratch
 
 Having this knowledge about the parameters we can now **simulate data from scratch**
 
@@ -441,10 +441,11 @@ For nicely displaying it, you can use pretty_table:
 pretty_table(ptbl)
 ```
 
-# 4. Recreate a more complex dataset from scratch and analyze power for specific model parameter but various sample sizes.
+## Recreate a more complex dataset from scratch and analyze power for specific model parameter but various sample sizes.
+
+### Recreate the `kb07`-dataset from scratch
 
 For full control over all parameters in our `kb07` data set we will recreate the design using the method shown above.
-
 
 Define subject and item number:
 
@@ -611,7 +612,7 @@ power_table(kb07_sim)
 
 We have successfully recreated the power simulation of an existing dataset from scratch. This has the advantage, that we now can iterate over different numbers of subjects and items.
 
-# *4.2 Loop over subject and item sizes*
+## Loop over subject and item sizes
 
 When designing a study, you may be interested in trying various numbers of subjects and items to see how that affects the power of your study.
 To do this you can use a loop to run simulations over a range of values for any parameter.
