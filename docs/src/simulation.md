@@ -101,7 +101,7 @@ In other words, we think about how big the between-subject and between-item diff
 
 We can now create the associated covariance matrices.[^cholesky]
 
-[^cholesky]: Technically, we're creating the lower Cholesky factor of these matrices, which is a bit like the matrix square root. In other words, we're creating the matrix form of standard deviations instead of the matrix form of the variances.]
+[^cholesky]: Technically, we're creating the lower Cholesky factor of these matrices, which is a bit like the matrix square root. In other words, we're creating the matrix form of standard deviations instead of the matrix form of the variances.
 
 ```@example Main
 re_item = create_re(1.3, 0.35, 0.75)
