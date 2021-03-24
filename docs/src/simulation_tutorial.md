@@ -267,15 +267,18 @@ The elements above the diagonal are just a mirror image.
 re_item_corr = [1.0 -0.7; -0.7 1.0]
 ```
 
-Now we put together all relations of standard deviations and the correlation-matrix for the `item`-group:
-
-TODO: How is the result called exactly? variance-covariance matrix? 
+Now we put together all relations of standard deviations and the correlation-matrix for the `item`-group.
+This calculates the covariance factorization which is the theta matrix.
 
 ```@example Main
 re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
 ```
 
-Note: Don't be too specific with your values. If there are rounding errors, you will get the error-message: 
+
+![](ThetaExplanation.png)
+
+
+Note: Don't be too specific with your values in create_re(). If there are rounding errors, you will get the error-message: 
 `PosDefException: matrix is not Hermitian; Cholesky factorization failed.`
 
 But you can extract the exact values like shown below:
@@ -297,15 +300,15 @@ re_subj_corr = [1.0]
 ```
 Now we put together all relations of standard deviations and the correlation-matrix for the `subj`-group:
 
-TODO: How is the result called exactly? variance-covariance matrix? 
-
+This calculates the covariance factorization which is the theta matrix.
 ```@example Main
 re_subj = create_re(0.438; corrmat = re_subj_corr)
 ```
 
 If you want the exact value you can use
 ```@example Main
-σ_3_exact = VarCorr(kb07_m).σρ[2][1][1] / residuals_exact
+σ_residuals_exact = VarCorr(kb07_m).s
+σ_3_exact = VarCorr(kb07_m).σρ[2][1][1] / σ_residuals_exact
 re_subj = create_re(σ_3_exact; corrmat = re_subj_corr)
 ```
 
@@ -487,11 +490,8 @@ first(fake_kb07_df,8)
 The function `simdat_crossed` generates a balanced fully crossed design.
 Unfortunately, our original design is not fully crossed. Every subject saw an image only once, thus in one of eight possible conditions. To simulate that we only keep one of every eight lines.
 
-TODO: NEED HELP, is that correct? or is it possible to do it in simdat_crossed?
-========
-
 We sort the dataframe to enable easier selection
-```
+```@example Main
 fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
 ```
 
@@ -545,20 +545,20 @@ Here we use the values that we found in the model of the existing dataset:
 
 ```@example Main
 #beta
-new_beta = [2181.85, 67.879, -333.791, 78.5904]
-new_beta = kb07_m.β
+new_beta = [2181.85, 67.879, -333.791, 78.5904] #manual
+new_beta = kb07_m.β #grab from existing model  
 
 #sigma
-new_sigma = 680.032
-new_sigma = kb07_m.σ
+new_sigma = 680.032 #manual
+new_sigma = kb07_m.σ #grab from existing model
 
 #theta
 re_item_corr = [1.0 -0.7; -0.7 1.0]
 re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
 re_subj_corr = [1.0]
 re_subj = create_re(0.438; corrmat = re_subj_corr)
-new_theta = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
-new_theta = kb07_m.θ
+new_theta = vcat( flatlowertri(re_item), flatlowertri(re_subj) )  #manual
+new_theta = kb07_m.θ #grab from existing model
 ```
 
 
@@ -699,26 +699,14 @@ Our dataframe `d` now contains the power information for each combination of sub
 print(d)
 ```
 
+Lastly we plot our results:
+```@example Main
+categorical!(d, :item_n)
 
-
-TODO: NEED Help: it would be nice to make a plot of this!
-=========
-
-Here we show how to make a quick plot of the output
+plot(d, x="subj_n", y="power",xgroup= "coefname",color="item_n", Geom.subplot_grid(Geom.point, Geom.line), Guide.xlabel("Number of subjects by parameter"), Guide.ylabel("Power"))
 ```
-using StatsPlots
 
-@df d scatter(
-    :subj_n,
-    :power,
-    group = :item_n,
-    title = "Power of different designs",
-    xlabel = "# of Subjects",
-    ylabel = "power",
-    m = (0.5, [:cross :hex :star7], 12),
-    bg = RGB(0.2, 0.2, 0.2)
-)
-```
+
 
 # Credit
 This tutorial was conceived for ZiF research and tutorial workshop by Lisa DeBruine (Feb. 2020) presented again by Phillip Alday during the SMLP Summer School (Sep. 2020).
