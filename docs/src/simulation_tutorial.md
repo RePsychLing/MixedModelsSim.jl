@@ -14,6 +14,10 @@ Power analysis is an important tool for planning an experimental design. Here we
 
 First, here are the packages needed in this example.
 
+```@setup Main
+using DisplayAs # so that things look REPL-y
+```
+
 ```@example Main
 using MixedModels        # run mixed models
 using MixedModelsSim     # simulation functions for mixed models
@@ -69,6 +73,7 @@ kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
 Fit the model
 ```@example Main
 kb07_m = fit(MixedModel, kb07_f, kb07; contrasts=contrasts)
+DisplayAs.Text(ans) # hide
 ```
 
 ### Simulate from existing data with same model parameters
@@ -125,6 +130,7 @@ plot(x = βLoad, Geom.density, Guide.xlabel("Parametric bootstrap estimates of �
 Convert p-values of your fixed-effects parameters to dataframe
 ```@example Main
 kb07_sim_df = DataFrame(kb07_sim.coefpvalues);
+nothing # hide
 ```
 
 Have a look at your simulated data:
@@ -321,6 +327,7 @@ We can install these parameter in the `parametricbootstrap()`-function or in the
 
 ```@example Main
 update!(kb07_m, re_item, re_subj)
+DisplayAs.Text(ans) # hide
 ```
 
 
@@ -396,8 +403,8 @@ This is mainly to keep the example simple and to keep the parameter `θ` easier 
 Fit the model:
 
 ```@example Main
-m1 = fit(MixedModel, f1, dat, contrasts=contrasts);
-print(m1)
+m1 = fit(MixedModel, f1, dat, contrasts=contrasts)
+DisplayAs.Text(ans) # hide
 ```
 
 Because the `dv` is just random noise from N(0,1), there will be basically no subject or item random variance, residual variance will be near 1.0, and the estimates for all effects should be small.
@@ -479,7 +486,8 @@ fake_kb07 = simdat_crossed(subj_n, item_n,
                      both_win = both_win);
 
 
-fake_kb07_df = DataFrame(fake_kb07)
+fake_kb07_df = DataFrame(fake_kb07);
+nothing # hide
 ```
 
 Simulate data:
@@ -495,6 +503,7 @@ Make a dataframe:
 
 ```@example Main
 fake_kb07_df = DataFrame(fake_kb07);
+nothing # hide
 ```
 
 Have a look:
@@ -510,6 +519,7 @@ We sort the dataframe to enable easier selection
 
 ```@example Main
 fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
+nothing # hide
 ```
 
 In order to select only the relevant rows of the data set we define an index which represets a random choice of one of every eight rows. First we generate a vector `idx` which represents which row to keep in each set of 8.
@@ -533,6 +543,7 @@ Reduce the fully crossed design to the original experimental design:
 ```@example Main
 fake_kb07_df= fake_kb07_df[idx, :]
 rename!(fake_kb07_df, :dv => :rt_trunc)
+nothing # hide
 ```
 
 Now we can use the simulated data in the same way as above.
@@ -554,8 +565,8 @@ kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
 Fit the model:
 
 ```@example Main
-fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df, contrasts=contrasts);
-print(fake_kb07_m)
+fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df, contrasts=contrasts)
+DisplayAs.Text(ans) # hide
 ```
 
 Set random seed for reproducibility:
@@ -723,6 +734,7 @@ for subj_n in sub_ns
 
     end
 end
+nothing # hide
 ```
 
 Our dataframe `d` now contains the power information for each combination of subjects and items.
