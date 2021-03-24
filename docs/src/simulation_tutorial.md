@@ -516,7 +516,7 @@ In order to select only the relevant rows of the data set we define an index whi
 
 ```@example Main
 len = convert(Int64,(length(fake_kb07)/8))
-idx = rand(rng, 1:8 , len)
+idx = rand(rng, collect(1:8) , len)
 ```
 
 Then we create an array `A`, of the same length that is populated multiples of the number 8. Added together `A` and `idx` give the indexes of one row from each set of 8s.
@@ -696,7 +696,7 @@ for subj_n in sub_ns
     # Reduce the fully crossed design to the original experimental design:
     fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
     len = convert(Int64,(length(fake_kb07)/8))
-    idx = rand(rng, 1:8 , len)
+    idx = rand(rng, collect(1:8) , len)
     A = repeat([8], inner=len-1)
     A = append!( [0], A )
     A = cumsum(A)
