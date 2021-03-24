@@ -4,15 +4,14 @@ Power Analysis and Simulation Tutorial
 This tutorial demonstrates how to conduct power analyses and data simulation using Julia and the MixedModelsSim package.
 
 Power analysis is an important tool for planning an experimental design. Here we show how to
+
 1. Take existing data and calculate power by simulating new data.
 2. Adapt parameters in a given Linear Mixed Model to analyze power without changing the existing data set.
 3. Create a (simple) balanced fully crossed dataset from scratch and analyze power.
 4. Recreate a more complex dataset from scratch and analyze power for specific model parameter but various sample sizes.
 
-
-
-
 ### Load the packages we'll be using in Julia
+
 First, here are the packages needed in this example.
 
 ```@example Main
@@ -21,13 +20,13 @@ using MixedModelsSim     # simulation functions for mixed models
 using DataFrames, Tables # work with data tables
 using StableRNGs         # random number generator
 using CSV                # write CSV files
-#using Markdown
 using Statistics         # basic math funcions
 using DataFramesMeta     # dplyr-like operations
 using Gadfly             # plotting package
 ```
 
 ### Define number of iterations
+
 Here we define how many model simulations we want to do. A large number will give more reliable results, but will take longer to compute. It is useful to set it to a low number for testing, and increase it for your final analysis.
 
 ```@example Main
@@ -37,6 +36,7 @@ nsims = 500
 ##  Take existing data and calculate power by simulate new data with bootstrapping.
 
 ### Build a Linear Mixed Model from existing data.
+
 For the first example we are going to simulate bootstrapped data from an existing data set:
 
 *Experiment 2 from Kronmüller, E., & Barr, D. J. (2007). Perspective-free pragmatics: Broken precedents and the recovery-from-preemption hypothesis. Journal of Memory and Language, 56(3), 436-455.*
@@ -301,11 +301,13 @@ re_subj_corr = [1.0]
 Now we put together all relations of standard deviations and the correlation-matrix for the `subj`-group:
 
 This calculates the covariance factorization which is the theta matrix.
+
 ```@example Main
 re_subj = create_re(0.438; corrmat = re_subj_corr)
 ```
 
 If you want the exact value you can use
+
 ```@example Main
 σ_residuals_exact = VarCorr(kb07_m).s
 σ_3_exact = VarCorr(kb07_m).σρ[2][1][1] / σ_residuals_exact
@@ -313,10 +315,13 @@ re_subj = create_re(σ_3_exact; corrmat = re_subj_corr)
 ```
 
 As mentioned above `θ` is the compact form of these covariance matrices:
+
 ```@example Main
 kb07_m.θ = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
 ```
+
 We can install these parameter in the `parametricbootstrap()`-function or in the model like this:
+
 ```@example Main
 update!(kb07_m, re_item, re_subj)
 ```
@@ -367,26 +372,32 @@ dat = simdat_crossed(subj_n,
 ```
 
 Have a look:
+
 ```@example Main
 first(DataFrame(dat),8)
 ```
+
 The values we see in the column `dv` is just random noise.
 
 Set contrasts:
+
 ```@example Main
 contrasts = Dict(:age => HelmertCoding(),
                  :condition => HelmertCoding());
 ```
 
 Define formula:
+
 ```@example Main
 f1 = @formula dv ~ 1 + age * condition + (1|item) + (1|subj);
 ```
+
 Note that we did not include condition as random slopes for item and subject.
 This is mainly to keep the example simple and to keep the parameter `θ` easier to understand (see Section 3 for the explanation of theta).
 
 
 Fit the model:
+
 ```@example Main
 m1 = fit(MixedModel, f1, dat, contrasts=contrasts);
 print(m1)
@@ -397,11 +408,13 @@ Don't worry, we'll specify fixed and random effects directly in `parametricboots
 
 
 Set random seed for reproducibility:
+
 ```@example Main
 rng = StableRNG(42);
 ```
 
 Specify `β`, `σ`, and `θ`, we just made up this parameter:
+
 ```@example Main
 new_beta = [0., 0.25, 0.25, 0.]
 new_sigma = 2.0
@@ -434,12 +447,14 @@ For full control over all parameters in our `kb07` data set we will recreate the
 
 
 Define subject and item number:
+
 ```@example Main
 subj_n = 56
 item_n = 32
 ```
 
 Define factors in a dict:
+
 ```@example Main
 subj_btwn = nothing
 item_btwn = nothing
@@ -448,7 +463,8 @@ both_win = Dict("spkr" => ["old", "new"],
                 "load" => ["yes", "no"]);
 ```
 
-### Play with simdat_crossed
+### Play with `simdat_crossed`
+
 ```@example Main
 subj_btwn = Dict("spkr" => ["old", "new"],
                 "prec" => ["maintain", "break"],
@@ -469,6 +485,7 @@ fake_kb07_df = DataFrame(fake_kb07)
 ```
 
 Simulate data:
+
 ```@example Main
 fake_kb07 = simdat_crossed(subj_n, item_n,
                      subj_btwn = subj_btwn,
@@ -477,11 +494,13 @@ fake_kb07 = simdat_crossed(subj_n, item_n,
 ```
 
 Make a dataframe:
+
 ```@example Main
 fake_kb07_df = DataFrame(fake_kb07);
 ```
 
 Have a look:
+
 ```@example Main
 first(fake_kb07_df,8)
 ```
@@ -490,17 +509,20 @@ The function `simdat_crossed` generates a balanced fully crossed design.
 Unfortunately, our original design is not fully crossed. Every subject saw an image only once, thus in one of eight possible conditions. To simulate that we only keep one of every eight lines.
 
 We sort the dataframe to enable easier selection
+
 ```@example Main
 fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
 ```
 
 In order to select only the relevant rows of the data set we define an index which represets a random choice of one of every eight rows. First we generate a vector `idx` which represents which row to keep in each set of 8.
+
 ```@example Main
 len = convert(Int64,(length(fake_kb07)/8))
 idx = rand(rng, 1:8 , len)
 ```
 
 Then we create an array `A`, of the same length that is populated multiples of the number 8. Added together `A` and `idx` give the indexes of one row from each set of 8s.
+
 ```@example Main
 A = repeat([8], inner=len-1)
 A = append!( [0], A )
@@ -509,6 +531,7 @@ idx = idx+A
 ```
 
 Reduce the fully crossed design to the original experimental design:
+
 ```@example Main
 fake_kb07_df= fake_kb07_df[idx, :]
 rename!(fake_kb07_df, :dv => :rt_trunc)
@@ -517,6 +540,7 @@ rename!(fake_kb07_df, :dv => :rt_trunc)
 Now we can use the simulated data in the same way as above.
 
 Set contrasts:
+
 ```@example Main
 contrasts = Dict(:spkr => HelmertCoding(),
                  :prec => HelmertCoding(),
@@ -524,17 +548,20 @@ contrasts = Dict(:spkr => HelmertCoding(),
 ```
 
 Define formula, same as above:
+
 ```@example Main
 kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
 ```
 
 Fit the model:
+
 ```@example Main
 fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df, contrasts=contrasts);
 print(fake_kb07_m)
 ```
 
 Set random seed for reproducibility:
+
 ```@example Main
 rng = StableRNG(42);
 ```
@@ -562,6 +589,7 @@ new_theta = kb07_m.θ #grab from existing model
 
 
 Run nsims iterations:
+
 ```@example Main
 fake_kb07_sim = parametricbootstrap(rng, nsims, fake_kb07_m,
                         β = new_beta,
@@ -591,6 +619,7 @@ To do this you can use a loop to run simulations over a range of values for any 
 ### We first define every fixed things outside the loop (same as above):
 
 Define factors in a dict:
+
 ```@example Main
 subj_btwn = nothing
 item_btwn = nothing
@@ -600,6 +629,7 @@ both_win = Dict("spkr" => ["old", "new"],
 ```
 
 Set contrasts:
+
 ```@example Main
 contrasts = Dict(:spkr => HelmertCoding(),
                  :prec => HelmertCoding(),
@@ -607,16 +637,19 @@ contrasts = Dict(:spkr => HelmertCoding(),
 ```
 
 Set random seed for reproducibility:
+
 ```@example Main
 rng = StableRNG(42);
 ```
 
 Define formula:
+
 ```@example Main
 kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
 ```
 
 Specify `β`, `σ`, and `θ`:
+
 ```@example Main
 #beta
 new_beta = [2181.85, 67.879, -333.791, 78.5904]
@@ -697,6 +730,7 @@ end
 ```
 
 Our dataframe `d` now contains the power information for each combination of subjects and items.
+
 ```@example Main
 print(d)
 ```
@@ -707,8 +741,6 @@ categorical!(d, :item_n)
 
 plot(d, x="subj_n", y="power",xgroup= "coefname",color="item_n", Geom.subplot_grid(Geom.point, Geom.line), Guide.xlabel("Number of subjects by parameter"), Guide.ylabel("Power"))
 ```
-
-
 
 # Credit
 This tutorial was conceived for ZiF research and tutorial workshop by Lisa DeBruine (Feb. 2020) presented again by Phillip Alday during the SMLP Summer School (Sep. 2020).
