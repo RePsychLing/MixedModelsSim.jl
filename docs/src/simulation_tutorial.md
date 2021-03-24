@@ -282,10 +282,10 @@ Note: Don't be too specific with your values in create_re(). If there are roundi
 But you can extract the exact values like shown below:
 
 ```@example Main
-corr_exact = VarCorr(kb07_m).σρ[1][2][1][1]
+corr_exact = VarCorr(kb07_m).σρ.item.ρ[1]
 σ_residuals_exact = VarCorr(kb07_m).s
-σ_1_exact = VarCorr(kb07_m).σρ[1][1][1] / residuals_exact
-σ_2_exact = VarCorr(kb07_m).σρ[1][1][2] / residuals_exact
+σ_1_exact = VarCorr(kb07_m).σρ.item.σ[1] / σ_residuals_exact
+σ_2_exact = VarCorr(kb07_m).σρ.item.σ[2] / σ_residuals_exact
 
 re_item_corr = [1.0 corr_exact; corr_exact 1.0]
 re_item = create_re(σ_1_exact, σ_2_exact; corrmat = re_item_corr)
@@ -293,24 +293,22 @@ re_item = create_re(σ_1_exact, σ_2_exact; corrmat = re_item_corr)
 
 Let's continue with the `subj`-part.
 
-We haven't had any correlation, because we only have one intercept term, but you can set it to `1.0`.
-```@example Main
-re_subj_corr = [1.0]
-```
+Since there the by-subject random effects have only one entry (the intercept), there are no correlations to specify and we can omit the `corrmat` argument.
+
 Now we put together all relations of standard deviations and the correlation-matrix for the `subj`-group:
 
 This calculates the covariance factorization which is the theta matrix.
 
 ```@example Main
-re_subj = create_re(0.438; corrmat = re_subj_corr)
+re_subj = create_re(0.438)
 ```
 
 If you want the exact value you can use
 
 ```@example Main
 σ_residuals_exact = VarCorr(kb07_m).s
-σ_3_exact = VarCorr(kb07_m).σρ[2][1][1] / σ_residuals_exact
-re_subj = create_re(σ_3_exact; corrmat = re_subj_corr)
+σ_3_exact = VarCorr(kb07_m).σρ.subj.σ[1] / σ_residuals_exact
+re_subj = create_re(σ_3_exact)
 ```
 
 As mentioned above `θ` is the compact form of these covariance matrices:
@@ -572,7 +570,7 @@ Here we use the values that we found in the model of the existing dataset:
 ```@example Main
 #beta
 new_beta = [2181.85, 67.879, -333.791, 78.5904] #manual
-new_beta = kb07_m.β #grab from existing model  
+new_beta = kb07_m.β #grab from existing model
 
 #sigma
 new_sigma = 680.032 #manual
@@ -581,8 +579,7 @@ new_sigma = kb07_m.σ #grab from existing model
 #theta
 re_item_corr = [1.0 -0.7; -0.7 1.0]
 re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
-re_subj_corr = [1.0]
-re_subj = create_re(0.438; corrmat = re_subj_corr)
+re_subj = create_re(0.438)
 new_theta = vcat( flatlowertri(re_item), flatlowertri(re_subj) )  #manual
 new_theta = kb07_m.θ #grab from existing model
 ```
@@ -662,8 +659,7 @@ new_sigma = kb07_m.σ
 #theta
 re_item_corr = [1.0 -0.7; -0.7 1.0]
 re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
-re_subj_corr = [1.0]
-re_subj = create_re(0.438; corrmat = re_subj_corr)
+re_subj = create_re(0.438)
 new_theta = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
 new_theta = kb07_m.θ
 ```
