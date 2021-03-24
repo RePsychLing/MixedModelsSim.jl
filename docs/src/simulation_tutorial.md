@@ -4,7 +4,7 @@ Power Analysis and Simulation Tutorial
 This tutorial demonstrates how to conduct power analyses and data simulation using Julia and the MixedModelsSim package.
 
 Power analysis is an important tool for planning an experimental design. Here we show how to
-1. Take existing data and calculate power by simulate new data with bootstrapping.
+1. Take existing data and calculate power by simulating new data.
 2. Adapt parameters in a given Linear Mixed Model to analyze power without changing the existing data set.
 3. Create a (simple) balanced fully crossed dataset from scratch and analyze power.
 4. Recreate a more complex dataset from scratch and analyze power for specific model parameter but various sample sizes.
@@ -34,9 +34,9 @@ Here we define how many model simulations we want to do. A large number will giv
 nsims = 500
 ```
 
-# 1. Take existing data and calculate power by simulate new data with bootstrapping.
-## **1.1. Build a Linear Mixed Model from existing data.**
+##  Take existing data and calculate power by simulate new data with bootstrapping.
 
+### Build a Linear Mixed Model from existing data.
 For the first example we are going to simulate bootstrapped data from an existing data set:
 
 *Experiment 2 from Kronmüller, E., & Barr, D. J. (2007). Perspective-free pragmatics: Broken precedents and the recovery-from-preemption hypothesis. Journal of Memory and Language, 56(3), 436-455.*
@@ -71,7 +71,7 @@ Fit the model
 kb07_m = fit(MixedModel, kb07_f, kb07; contrasts=contrasts)
 ```
 
-## **1.2 Simulate from existing data with same model parameters**
+### Simulate from existing data with same model parameters
 
 We will first look at the power of the dataset with the same parameters as in the original data set. This means that each dataset will have the exact number of observations as the original data. Here, we use the model `kb07_m` we fitted above to our dataset `kb07`.
 
@@ -159,7 +159,7 @@ For nicely displaying, you can use `pretty_table`:
 pretty_table(ptbl)
 ```
 
-# 2. Adapt parameters in a given Linear Mixed Model to analyze power without changing the existing data set.
+## Adapt parameters in a given Linear Mixed Model to analyze power without changing the existing data set.
 
 Let's say we want to check our power to detect effects of spkr, prec, and load
 that are only half the size as in our pilot data. We can set a new vector of beta values
@@ -430,7 +430,6 @@ pretty_table(ptbl)
 
 # 4. Recreate a more complex dataset from scratch and analyze power for specific model parameter but various sample sizes.
 
-# *4.1 Recreate the `kb07`-dataset from scratch*
 For full control over all parameters in our `kb07` data set we will recreate the design using the method shown above.
 
 
@@ -640,17 +639,20 @@ new_theta = kb07_m.θ
 ### Then we define the variables that out loop will iterate over
 
 Define subject and item numbers as arrays:
+
 ```@example Main
 sub_ns = [20, 30, 40];
 item_ns = [16, 24, 32];
 ```
 
-Make an emty dataframe:
+Make an empty dataframe:
+
 ```@example Main
 d = DataFrame();
 ```
 
 ### Run the loop:
+
 ```@example Main
 for subj_n in sub_ns
     for item_n in item_ns
