@@ -158,7 +158,7 @@ end
 """
     create_re(sigmas...; corrmat=Matrix{Float64}(I, length(sigmas), length(sigmas))
 
-Create the covariance matrix for a random effect from the standard deviations and correlation matrix.
+Create the covariance factor for a random effect from the standard deviations and correlation matrix.
 
 The `sigmas` should be specified in the same order as the random slopes in the
 output of `VarCorr(m)`.
@@ -167,18 +167,13 @@ The correlation matrix defaults to the identiy matrix, i.e. no correlation betwe
 random effects.
 
 !!! note
-    The return value is the lower Cholesky of the covariance matrix, which is what
+    The return value is the lower Cholesky factor of the covariance matrix, which is what
     [`update!`](@ref) requires.
 """
 function create_re(sigmas...; corrmat=nothing)
-    dim = length(sigmas)
-    ss = diagm([sigmas...])
+    ss = Diagonal([sigmas...])
 
-    if isnothing(corrmat)
-        LowerTriangular(ss)
-    else
-        cholesky(ss * corrmat * ss).L
-    end
+    isnothing(corrmat) ? LowerTriangular(ss) : ss * cholesky(Symmetric(corrmat, :L)).L
 end
 
 

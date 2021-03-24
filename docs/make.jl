@@ -1,15 +1,15 @@
-using Documenter, MixedModelsSim
+using Documenter
+using MixedModelsSim
 
-makedocs(;
-    modules = [MixedModelsSim],
-    format = Documenter.HTML(assets = String[]),
-    pages = ["Home" => "index.md"
-             "Full Example" => "simulation.md"],
-    repo = "https://github.com/RePsychLing/MixedModelsSim.jl/blob/{commit}{path}#L{line}",
+makedocs(
+    root = joinpath(dirname(pathof(MixedModelsSim)), "..", "docs"),
     sitename = "MixedModelsSim.jl",
+    doctest = true,
     authors = "Phillip Alday, Douglas Bates, Lisa DeBruine, Reinhold Kliegl",
-    source = joinpath("..", "docs", "src"),
-    build = joinpath("..", "docs", "build"),
+    pages = [
+        "index.md",
+        "simulation.md",
+    ],
 )
 
 deploydocs(; repo = "github.com/RePsychLing/MixedModelsSim.jl", push_preview = true)
