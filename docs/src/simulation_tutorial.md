@@ -23,7 +23,6 @@ using MixedModels        # run mixed models
 using MixedModelsSim     # simulation functions for mixed models
 using DataFrames, Tables # work with data tables
 using StableRNGs         # random number generator
-using CSV                # write CSV files
 using Statistics         # basic math funcions
 using DataFramesMeta     # dplyr-like operations
 using Gadfly             # plotting package
