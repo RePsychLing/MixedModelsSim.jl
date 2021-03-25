@@ -512,7 +512,7 @@ first(fake_kb07_df,8)
 ```
 
 The function `simdat_crossed` generates a balanced fully crossed design.
-Unfortunately, our original design is not fully crossed. Every subject saw an image only once, thus in one of eight possible conditions. To simulate that we only keep one of every eight lines.
+Unfortunately, our original design is not balanced fully crossed. Every subject saw an image only once, thus in one of eight possible conditions. To simulate that we only keep one of every eight lines.
 
 We sort the dataframe to enable easier selection
 
@@ -521,7 +521,7 @@ fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
 nothing # hide
 ```
 
-In order to select only the relevant rows of the data set we define an index which represets a random choice of one of every eight rows. First we generate a vector `idx` which represents which row to keep in each set of 8.
+In order to select only the relevant rows of the data set we define an index which represents a random choice of one of every eight rows. First we generate a vector `idx` which represents which row to keep in each set of 8.
 
 ```@example Main
 len = convert(Int64,(length(fake_kb07)/8))
@@ -537,7 +537,7 @@ A = cumsum(A)
 idx = idx+A
 ```
 
-Reduce the fully crossed design to the original experimental design:
+Reduce the balanced fully crossed design to the original experimental design:
 
 ```@example Main
 fake_kb07_df= fake_kb07_df[idx, :]
@@ -696,14 +696,14 @@ d = DataFrame();
 for subj_n in sub_ns
     for item_n in item_ns
 
-    # Make fully crossed data:
+    # Make balanced fully crossed data:
     fake_kb07 = simdat_crossed(subj_n, item_n,
                      subj_btwn = subj_btwn,
                      item_btwn = item_btwn,
                      both_win = both_win);
     fake_kb07_df = DataFrame(fake_kb07)
 
-    # Reduce the fully crossed design to the original experimental design:
+    # Reduce the balanced fully crossed design to the original experimental design:
     fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
     len = convert(Int64,(length(fake_kb07)/8))
     idx = rand(rng, collect(1:8) , len)
