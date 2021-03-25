@@ -467,7 +467,7 @@ both_win = Dict("spkr" => ["old", "new"],
                 "load" => ["yes", "no"]);
 ```
 
-### Play with `simdat_crossed`
+### **Try**: Play with `simdat_crossed`.
 
 ```@example Main
 subj_btwn = Dict("spkr" => ["old", "new"],
