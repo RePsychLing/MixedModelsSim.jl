@@ -1,7 +1,7 @@
 name = "MixedModelsSim"
 uuid = "d5ae56c5-23ca-4a1f-b505-9fc4796fc1fe"
 authors = ["Phillip Alday", "Douglas Bates", "Lisa DeBruine", "Reinhold Kliegl"]
-version = "0.2.1"
+version = "0.2.2"
 
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"

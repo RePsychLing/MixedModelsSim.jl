@@ -61,7 +61,7 @@ function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
         ic = values(item_btwn) |> collect
         nlev = prod(length, ic)
         if mod(item_n, nlev) != 0
-            throw(ArgumentError("Number of items is not a multiple of the number of between-subject levels"))
+            throw(ArgumentError("Number of items is not a multiple of the number of between-item levels"))
         end
         item_prod = Iterators.product(ic...)
         item_vals = columntable(item_prod) |> collect
