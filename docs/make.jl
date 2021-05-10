@@ -9,6 +9,7 @@ makedocs(
     pages = [
         "index.md",
         "simulation.md",
+        "simulation_tutorial.md",
     ],
 )
 
