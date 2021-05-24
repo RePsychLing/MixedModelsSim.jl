@@ -33,6 +33,7 @@ end
     df = crossjoin(subj, item)
     @test nrow(df) == 180
     @test ncol(df) == 3
+    @test_throws ArgumentError nlevstbl(:baditem, 9, :nlev => ["low", "high"])
 end
 
 @testset "pooled!" begin
