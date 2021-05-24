@@ -20,6 +20,21 @@ end
     @test first(levs) == "k001"
 end
 
+@testset "nlevstbl" begin
+    subj = DataFrame(nlevstbl(:subj, 20))
+    @test nrow(subj) == 20
+    @test isone(ncol(subj))
+    @test propertynames(subj) == [:subj]
+    item = DataFrame(nlevstbl(:item, 9, :lev => ["low", "medium", "high"]))
+    @test nrow(item) == 9
+    @test ncol(item) == 2
+    @test propertynames(item) == [:item, :lev]
+    @test first(first(subj)) == "S01"
+    df = crossjoin(subj, item)
+    @test nrow(df) == 180
+    @test ncol(df) == 3
+end
+
 @testset "pooled!" begin
     subject = (subj = ["S1","S2","S3","S4","S5"], age=["O","O","O","Y","Y"]);
 
