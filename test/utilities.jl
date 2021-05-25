@@ -34,6 +34,10 @@ end
     @test nrow(df) == 180
     @test ncol(df) == 3
     @test_throws ArgumentError nlevstbl(:baditem, 9, :nlev => ["low", "high"])
+    twofac = nlevstbl(:item, 18, :level => ["low", "medium", "high"], :blur => ["N", "Y"])
+    @test length(twofac) == 3
+    @test length(first(twofac)) == 18
+    @test_throws ArgumentError nlevstbl(:item, 18, :level => ["low", "high"], :blur => ["N", "Y"])
 end
 
 @testset "pooled!" begin
