@@ -78,12 +78,49 @@ function nlevels(nlev, tag='S')
 end
 
 """
+    nlevstbl(nm::Symbol, n, vars::Pair{Symbol, Vector{String}}...)
+
+Return a `Tables.columntable` with a `nm` column as a `PooledArray` with `n` levels.
+
+If any `vars` pairs are given they are expanded to columns representing characteristics
+of the `nm` column.  In experimental design terminology, if say `nm` is `:item` then these
+represent between-item experimental factors.
+
+The `nm` column is generated as `nlevels(n, uppercase(first(string(nm))))`
+
+# Examples
+```julia-repl
+julia> nlevstbl(:item, 10)
+(item = ["I01", "I02", "I03", "I04", "I05", "I06", "I07", "I08", "I09", "I10"],)
+
+julia> nlevstbl(:item, 9, :level => ["low", "medium", "high"])
+(item = ["I1", "I2", "I3", "I4", "I5", "I6", "I7", "I8", "I9"], level = ["low", "medium", "high", "low", "medium", "high", "low", "medium", "high"])
+```
+"""
+function nlevstbl(nm::Symbol, n::Integer, vars::Pair{Symbol, Vector{String}}...)
+    nms = [nm]
+    vals = [PooledArray(nlevels(n, uppercase(first(string(nm)))), signed=true, compress=true)]
+    inner = 1
+    for var in vars
+        levs = last(var)
+        nlev = length(levs)
+        rept = inner * nlev
+        q, r = divrem(n, rept)
+        iszero(r) || throw(ArgumentError("n = $n is not a multiple of repetition block size $rept"))
+        push!(vals, PooledArray(repeat(levs, inner=inner, outer=q), signed=true, compress=true))
+        push!(nms, first(var))
+        inner = rept
+    end
+    NamedTuple{(nms...,)}((vals...,))
+end
+
+"""
     pooled!(df, cols::Type=Union{AbstractString,Missing})
 
 Like `DataFrames.categorical!` but converting columns to `PooledArray`s
 
 !!! warning
-    This method is not type-specific in the first argument order to eliminate
+    This method is not type-specific in the first argument, in order to eliminate
     a dependency on `DataFrames.jl`. It nonetheless expects a `DataFrame` as
     its first argument
 """
