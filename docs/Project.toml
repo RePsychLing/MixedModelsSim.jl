@@ -5,5 +5,6 @@ MixedModels = "ff71e718-51f3-5ec2-a782-8ffcbfa3c316"
 MixedModelsSim = "d5ae56c5-23ca-4a1f-b505-9fc4796fc1fe"
 
 [compat]
-Documenter = "0.26"
-julia = "1.5"
+DataFrames = "1.0"
+Documenter = "0.26, 0.27"
+julia = "1.6"
