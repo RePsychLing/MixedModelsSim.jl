@@ -16,6 +16,7 @@ export
     factorproduct,
     flatlowertri,
     nlevels,
+    nlevstbl,
     #withinitem,
     pooled!,
     power_table,
