@@ -1,7 +1,7 @@
 name = "MixedModelsSim"
 uuid = "d5ae56c5-23ca-4a1f-b505-9fc4796fc1fe"
 authors = ["Phillip Alday", "Douglas Bates", "Lisa DeBruine", "Reinhold Kliegl"]
-version = "0.2.3"
+version = "0.2.4"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
