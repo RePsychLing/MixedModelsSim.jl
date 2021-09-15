@@ -348,8 +348,6 @@ MixedModelsSim.update!(kb07_m, re_item, re_subj)
 DisplayAs.Text(ans) # hide
 ```
 
-
-
 ## A simple example from scratch
 
 Having this knowledge about the parameters we can now **simulate data from scratch**
@@ -712,46 +710,42 @@ d = DataFrame();
 ### Run the loop:
 
 ```@example Main
-@showprogress for subj_n in sub_ns
-    for item_n in item_ns
-
+@showprogress for subj_n in sub_ns, item_n in item_ns
     # Make balanced fully crossed data:
-    fake_kb07 = simdat_crossed(subj_n, item_n,
-                     subj_btwn = subj_btwn,
-                     item_btwn = item_btwn,
-                     both_win = both_win);
-    fake_kb07_df = DataFrame(fake_kb07)
+    fake = simdat_crossed(subj_n, item_n;
+                          subj_btwn = subj_btwn,
+                          item_btwn = item_btwn,
+                          both_win = both_win);
+    fake_df = DataFrame(fake)
 
     # Reduce the balanced fully crossed design to the original experimental design:
-    fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
-    len = convert(Int64,(length(fake_kb07)/8))
-    idx = rand(rng, collect(1:8) , len)
-    A = repeat([8], inner=len-1)
-    A = append!( [0], A )
+    fake_df = sort(fake_df, [:subj, :item, :load, :prec, :spkr])
+    local len = convert(Int64,(length(fake)/8))
+    local idx = rand(rng, collect(1:8) , len)
+    local A = repeat([8], inner=len-1)
+    A = append!([0], A)
     A = cumsum(A)
-    idx = idx+A
-    fake_kb07_df= fake_kb07_df[idx, :]
-    rename!(fake_kb07_df, :dv => :rt_trunc)
+    idx = idx + A
+    fake_df = fake_df[idx, :]
+    rename!(fake_df, :dv => :rt_trunc)
 
-    # Fit the model:
-    fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df, contrasts=contrasts);
+    # create the model:
+    fake_m = LinearMixedModel(kb07_f, fake_df, contrasts=contrasts);
 
     # Run nsims iterations:
-    fake_kb07_sim = parametricbootstrap(rng, nsims, fake_kb07_m,
-                        β = new_beta,
-                        σ = new_sigma,
-                        θ = new_theta,
-                        use_threads = false,
-                        hide_progress=true);
+    fake_sim = parametricbootstrap(rng, nsims, fake_m,
+                                   β = new_beta,
+                                   σ = new_sigma,
+                                   θ = new_theta,
+                                   use_threads = false,
+                                   hide_progress=true);
 
     # Power calculation
-    ptbl = power_table(fake_kb07_sim)
+    local ptbl = power_table(fake_sim)
     ptdf = DataFrame(ptbl)
     ptdf[!, :item_n] .= item_n
     ptdf[!, :subj_n] .= subj_n
     append!(d, ptdf)
-
-    end
 end
 nothing # hide
 ```
