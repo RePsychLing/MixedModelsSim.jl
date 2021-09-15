@@ -24,11 +24,8 @@ using MixedModelsSim     # simulation functions for mixed models
 using DataFrames, Tables # work with data tables
 using StableRNGs         # random number generator
 using Statistics         # basic math funcions
-using DataFrameMacros    # dplyr-like operations
-using CairoMakie         # plotting package
-CairoMakie.activate!(type="svg") # use vector graphics
-using MixedModelsMakie   # some extra plotting function for MixedModels
-using ProgressMeter      # show progress in loops
+using DataFramesMeta     # dplyr-like operations
+using Gadfly             # plotting package
 ```
 
 ### Define number of iterations
@@ -36,8 +33,7 @@ using ProgressMeter      # show progress in loops
 Here we define how many model simulations we want to do. A large number will give more reliable results, but will take longer to compute. It is useful to set it to a low number for testing, and increase it for your final analysis.
 
 ```@example Main
-# for real power analysis, set this much higher
-nsims = 100
+nsims = 500
 ```
 
 ##  Take existing data and calculate power by simulate new data with bootstrapping.
@@ -64,15 +60,13 @@ kb07 = MixedModels.dataset(:kb07);
 Set contrasts:
 ```@example Main
 contrasts = Dict(:spkr => HelmertCoding(),
-                 # set the reference level such that all the coefs
-                 # have the same sign, which makes the plotting nicer
-                 :prec => HelmertCoding(base="maintain"),
+                 :prec => HelmertCoding(),
                  :load => HelmertCoding());
 ```
 
 The chosen LMM for this dataset is defined by the following model formula:
 ```@example Main
-kb07_f = @formula(rt_trunc ~ 1 + spkr + prec + load + (1|subj) + (1 + prec|item));
+kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
 ```
 
 Fit the model
@@ -114,40 +108,23 @@ nrow(df)
 
 The dataframe df has 4500 rows: 9 parameters, each from 500 iterations.
 
-Plot some bootstrapped parameters:
+Plot some bootstrapped parameter:
 ```@example Main
-fig = Figure()
+σres = @where(df, :type .== "σ", :group .== "residual").value
+plot(x = σres, Geom.density, Guide.xlabel("Parametric bootstrap estimates of σ"), Guide.ylabel("Density"))
 
-σres = @subset(df, :type == "σ" && :group == "residual")
-ax = Axis(fig[1,1:2]; xlabel = "residual standard deviation", ylabel = "Density")
-density!(ax, σres.value)
+βInt = @where(df, :type .== "β", :names .== "(Intercept)").value
+plot(x = βInt, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β (Intercept)"), Guide.ylabel("Density"))
 
-βInt = @subset(df, :type == "β" && :names == "(Intercept)")
-ax = Axis(fig[1,3]; xlabel = "fixed effect for intercept", ylabel = "Density")
-density!(ax, βInt.value)
+βSpeaker = @where(df, :type .== "β", :names .== "spkr: old").value
+plot(x = βSpeaker, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β Speaker"), Guide.ylabel("Density"))
 
-βSpeaker = @subset(df, :type == "β" && :names == "spkr: old")
-ax = Axis(fig[2,1]; xlabel = "fixed effect for spkr: old", ylabel = "Density")
-density!(ax, βSpeaker.value)
+βPrecedents = @where(df, :type .== "β", :names .== "prec: maintain").value
+plot(x = βPrecedents, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β Precedents"), Guide.ylabel("Density"))
 
-βPrecedents = @subset(df, :type == "β" && :names == "prec: break")
-ax = Axis(fig[2,2]; xlabel = "fixed effect for prec: break", ylabel = "Density")
-density!(ax, βPrecedents.value)
-
-βLoad = @subset(df, :type == "β" && :names == "load: yes")
-ax = Axis(fig[2,3]; xlabel = "fixed effect for load: yes", ylabel = "Density")
-density!(ax, βLoad.value)
-
-Label(fig[0,:]; text = "Parametric bootstrap replicates by parameter", textsize=25)
-
-fig
+βLoad = @where(df, :type .== "β", :names .== "load: yes").value
+plot(x = βLoad, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β Load"), Guide.ylabel("Density"))
 ```
-
-For the fixed effects, we can do this more succinctly via the ridgeplot functionality in MixedModelsMakie, even optionally omitting the intercept (which we often don't care about).
-```@example Main
-ridgeplot(kb07_sim; show_intercept=false)
-```
-
 
 Convert p-values of your fixed-effects parameters to dataframe
 ```@example Main
@@ -177,9 +154,9 @@ An estimated power of 0 means that for none of our iterations the specific param
 
 You can also do it manually:
 ```@example Main
-kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: break"),:]
+kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"),:]
 
-mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: break"),:p] .< 0.05)
+mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"),:p] .< 0.05)
 ```
 
 For nicely displaying, you can use `pretty_table`:
@@ -194,6 +171,11 @@ that are only half the size as in our pilot data. We can set a new vector of bet
 with the `β` argument to `parametricbootstrap()`.
 
 
+Set random seed for reproducibility:
+```@example Main
+rng = StableRNG(42);
+```
+
 Specify β:
 ```@example Main
 new_beta = kb07_m.β
@@ -202,7 +184,7 @@ new_beta[2:4] = kb07_m.β[2:4]/2
 
 Run nsims iterations:
 ```@example Main
-kb07_sim_half = parametricbootstrap(StableRNG(42), nsims, kb07_m; β = new_beta, use_threads = false);
+kb07_sim_half = parametricbootstrap(rng, nsims, kb07_m; β = new_beta, use_threads = false);
 ```
 
 ### Power calculation
@@ -260,8 +242,8 @@ Thus, the related θ is the relationship: variance component devided by `residua
 kb07_m.θ
 ```
 
-We can not calculate the `θ`s for variance component *`item - prec: break`* this way, because it includes the correlation of
-*`item - prec: break`* and *`item - (Intercept)`*. But keep in mind that the relation of  *`item - prec: break`*-variability (`252.521`)
+We can not calculate the `θ`s for variance component *`item - prec: maintain`* this way, because it includes the correlation of
+*`item - prec: maintain`* and *`item - (Intercept)`*. But keep in mind that the relation of  *`item - prec: maintain`*-variability (`252.521`)
 and the `residual`-variability (`680.032`) is 252.521  /  680.032 =  `0.3713369`.
 
 The `θ` vector is the flattened version of the variance-covariance matrix - a lowertrinangular matrix.
@@ -283,7 +265,7 @@ Let's start by defining the correlation matrix for the `item`-part.
 The diagonal is always `1.0` because everything is perfectly correlated with itself.
 The elements below the diagonal follow the same form as the `Corr.` entries in the output of `VarCorr()`.
 In our example the correlation of
-*`item - prec: break`* and *`item - (Intercept)`* is `-0.7`.
+*`item - prec: maintain`* and *`item - (Intercept)`* is `-0.7`.
 The elements above the diagonal are just a mirror image.
 
 ```@example Main
@@ -343,8 +325,7 @@ kb07_m.θ = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
 We can install these parameter in the `parametricbootstrap()`-function or in the model like this:
 
 ```@example Main
-# need the fully qualified name here because Makie also defines update!
-MixedModelsSim.update!(kb07_m, re_item, re_subj)
+update!(kb07_m, re_item, re_subj)
 DisplayAs.Text(ans) # hide
 ```
 
@@ -489,22 +470,22 @@ both_win = Dict("spkr" => ["old", "new"],
 ### **Try**: Play with `simdat_crossed`.
 
 ```@example Main
-subj_btwn = Dict("spkr" => ["old", "new"],
-                "prec" => ["maintain", "break"],
-                "load" => ["yes", "no"]);
-item_btwn = nothing
-both_win = nothing;
+subj_btwn_play = nothing;
+item_btwn_play = nothing
+both_win_play  = Dict("spkr" => ["old", "new"],
+                    "prec" => ["maintain", "break"],
+                    "load" => ["yes", "no"]);
 
-subj_n = 56
-item_n = 32
+subj_n_play = 56
+item_n_play = 32
 
-fake_kb07 = simdat_crossed(subj_n, item_n,
-                     subj_btwn = subj_btwn,
-                     item_btwn = item_btwn,
-                     both_win = both_win);
+fake_kb07_play = simdat_crossed(subj_n_play, item_n_play,
+                     subj_btwn = subj_btwn_play,
+                     item_btwn = item_btwn_play,
+                     both_win = both_win_play);
 
 
-fake_kb07_df = DataFrame(fake_kb07);
+fake_kb07_df_play = DataFrame(fake_kb07_play);
 nothing # hide
 ```
 
@@ -649,16 +630,16 @@ Define factors in a dict:
 ```@example Main
 subj_btwn = nothing
 item_btwn = nothing
-both_win = Dict(:spkr => ["old", "new"],
-                :prec => ["maintain", "break"],
-                :load => ["yes", "no"]);
+both_win = Dict("spkr" => ["old", "new"],
+                "prec" => ["maintain", "break"],
+                "load" => ["yes", "no"]);
 ```
 
 Set contrasts:
 
 ```@example Main
 contrasts = Dict(:spkr => HelmertCoding(),
-                 :prec => HelmertCoding(base="maintain"),
+                 :prec => HelmertCoding(),
                  :load => HelmertCoding());
 ```
 
@@ -671,9 +652,9 @@ rng = StableRNG(42);
 Define formula:
 
 ```@example Main
-kb07_f = @formula(rt_trunc ~ 1 + spkr + prec + load + (1 | subj) + (1 + prec | item));
+kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
 ```
-a
+
 Specify `β`, `σ`, and `θ`:
 
 ```@example Main
@@ -712,7 +693,7 @@ d = DataFrame();
 ### Run the loop:
 
 ```@example Main
-@showprogress for subj_n in sub_ns
+for subj_n in sub_ns
     for item_n in item_ns
 
     # Make balanced fully crossed data:
@@ -741,8 +722,7 @@ d = DataFrame();
                         β = new_beta,
                         σ = new_sigma,
                         θ = new_theta,
-                        use_threads = false,
-                        hide_progress=true);
+                        use_threads = false);
 
     # Power calculation
     ptbl = power_table(fake_kb07_sim)
@@ -764,23 +744,9 @@ print(d)
 
 Lastly we plot our results:
 ```@example Main
-function subplot_power(f::Figure, dat, coefname)
-    coefpow = @subset(dat, :coefname == coefname)
-    ax = Axis(f;
-              xlabel="n subjects",
-              ylabel="n items",
-              #aspect=AxisAspect(1),
-              title="$(coefname)")
-    heatmap!(ax, coefpow.subj_n, coefpow.item_n, coefpow.power; colorrange=[0,1])
-    return ax
-end
+categorical!(d, :item_n)
 
-fig = Figure(; resolution=(1300,300))
-for (idx, cn) in enumerate(sort(unique(d.coefname)))
-    fig[1, idx] = subplot_power(fig, d, cn)
-end
-Colorbar(fig[1, end+1]; label="power", vertical=true, colorrange=[0,1], colormap=:viridis)
-fig
+plot(d, x="subj_n", y="power",xgroup= "coefname",color="item_n", Geom.subplot_grid(Geom.point, Geom.line), Guide.xlabel("Number of subjects by parameter"), Guide.ylabel("Power"))
 ```
 
 # Credit
