@@ -155,7 +155,7 @@ end
 
 
 """
-    update!(m::MixedModel; θ)
+    _update!(m::MixedModel, θ)
 
 Update the mixed model to use θ as its new parameter vector.
 
@@ -167,8 +167,8 @@ Update the mixed model to use θ as its new parameter vector.
 !!! note
     For GLMMs, this only sets θ and not β, even for `fast=false` fits.
 """
-update!(m::LinearMixedModel; θ) = updateL!(MixedModels.setθ!(m, θ))
-update!(m::GeneralizedLinearMixedModel; θ) = pirls!(MixedModels.setθ!(m, θ), false)
+_update!(m::LinearMixedModel, θ) = updateL!(MixedModels.setθ!(m, θ))
+_update!(m::GeneralizedLinearMixedModel, θ) = pirls!(MixedModels.setθ!(m, θ), false)
 # arguably type piracy, but we're all the same developers....
 
 
@@ -182,15 +182,86 @@ The `re` can be created using [`create_re`](@ref).
 
 They should be specified in the order specified in `VarCorr(m)`.
 
+!!! warning
+    We recommend against calling this method directly. Instead, use the method
+    with keyword arguments to specify the  different `re` by name.
+
+!!! note
+    This is a convenience function for installing a particular parameter vector
+    and the resulting model fit. It does not actually perform any type of
+    optimization.
+
 Details
 ========
 The `re` used as the λ fields of the model's `ReTerm`s and should be specified
 as the lower Cholesky factor of covariance matrices.
 """
 function update!(m::MixedModel, re...)
+    Base.depwarn("Specifying the random effects by position instead of name is deprecated",
+                 :update!vararg)
+
     θ = vcat((flatlowertri(rr) for rr in re)...)
-    update!(m; θ=θ)
+    return _update!(m, θ)
 end
+
+"""
+    update!(m::MixedModel; namedre...)
+    update!(m::MixedModel; θ)
+
+Update the mixed model to use the random-effects covariance matrices.
+
+The `namedre` can be created using [`create_re`](@ref). The `namedre` are specified
+by the name of the blocking variable, e.g. `subj=create_re(...)`.
+
+!!! warning
+    Setting θ directly as a keyword-argument is deprecated.
+
+!!! note
+    This is a convenience function for installing a particular parameter vector
+    and the resulting model fit. It does not actually perform any type of
+    optimization.
+
+Details
+========
+The `re` is used as the λ fields of the model's `ReTerm`s and should be specified
+as the lower Cholesky factor of covariance matrices.
+"""
+function update!(m::MixedModel; θ=nothing, namedre...)
+    if θ === nothing
+        length(namedre) == 0 && throw(ArgumentError("no random effects specified"))
+        θ = createθ(m; namedre...)
+    elseif θ !== nothing && length(namedre) != 0
+        throw(ArgumentError("θ must not be specified when named random effects are"))
+    end
+    return _update!(m, θ)
+end
+
+"""
+    createθ(m::MixedModel; named_re)
+    create_theta(m::MixedModel; named_re)
+
+Create the parameter vector θ corresponding to the random effects.
+
+The `named_re` can be created using [`create_re`](@ref). The `named_re` are specified
+by the name of the blocking variable, e.g. `subj=create_re(...)`.
+
+The model must be specified because the parameters are sorted internally for computational
+efficiency.
+"""
+function createθ(m::MixedModel; named_re...)
+    newre = Dict(named_re...)
+    fns = fnames(m)
+
+    if Set(fns) != keys(newre)
+        throw(ArgumentError("Specified blocking variables do not match model blocking variables."))
+    end
+
+    return mapfoldl(vcat, fns) do fname
+        flatlowertri(newre[fname])
+    end
+end
+
+const create_theta = createθ
 
 """
     create_re(sigmas...; corrmat=Matrix{Float64}(I, length(sigmas), length(sigmas))

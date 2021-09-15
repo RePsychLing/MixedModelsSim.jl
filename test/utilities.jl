@@ -60,7 +60,7 @@ end
 @testset "update!" begin
     @testset "LMM" begin
         fm1 = fit(MixedModel, @formula(reaction ~ 1 + days + (1 + days|subj)),
-                  MixedModels.dataset(:sleepstudy))
+                  MixedModels.dataset(:sleepstudy); progress=false)
         update!(fm1; θ=[1.0, 0.0, 1.0])
 
         @test all(values(first(fm1.σs)) .== fm1.σ)
@@ -70,7 +70,7 @@ end
     @testset "GLMM" begin
         cbpp = MixedModels.dataset(:cbpp)
         gm1 = fit(MixedModel, @formula((incid/hsz) ~ 1 + period + (1|herd)), cbpp, Binomial();
-                wts=cbpp.hsz, fast=true)
+                wts=cbpp.hsz, fast=true, progress=false)
 
         β = repeat([-1.], 4)
         θ = [0.5]
@@ -80,7 +80,7 @@ end
         @test all(values(first(gm1.σs)) .== θ)
         @test all(gm1.β .== β₀)
 
-        refit!(gm1, fast=false)
+        refit!(gm1, fast=false, progress=false)
         β₀ = copy(fixef(gm1))
         update!(gm1; θ=θ)
         @test all(values(first(gm1.σs)) .== θ)
@@ -89,9 +89,9 @@ end
 
 end
 
-@testset "create_re" begin
+@testset "create_re|θ" begin
     fm1 = fit(MixedModel, @formula(reaction ~ 1 + days + (1 + days|subj)),
-              MixedModels.dataset(:sleepstudy))
+              MixedModels.dataset(:sleepstudy); progress=false)
 
     σs = values(first(fm1.σs)) ./ fm1.σ
     ρ = only(first(VarCorr(fm1).σρ).ρ)
@@ -105,10 +105,34 @@ end
     fm1unfitted = LinearMixedModel(@formula(reaction ~ 1 + days + (1 + days|subj)),
                                    MixedModels.dataset(:sleepstudy))
 
+    @test_logs((:warn,
+                "Specifying the random effects by position instead of name is deprecated"),
+                update!(fm1unfitted, subjre))
+
     update!(fm1unfitted, subjre)
 
     vcu, vc = VarCorr(fm1unfitted), VarCorr(fm1)
 
     @test all(values(vcu.σρ.subj.σ) .≈ values(vc.σρ.subj.σ))
     @test all(values(vcu.σρ.subj.ρ) .≈ values(vc.σρ.subj.ρ))
+
+    @test_throws ArgumentError update!(fm1unfitted; subjitem=subjre, θ=fm1.θ)
+    @test_throws ArgumentError update!(fm1unfitted)
+    @test_throws ArgumentError update!(fm1unfitted; item=subjre)
+
+    fmkb = fit(MixedModel,
+               @formula(rt_trunc ~ 1 + spkr + prec + load + (1|subj) + (1 + prec|item)),
+               MixedModels.dataset(:kb07); progress=false)
+
+    fmkb2 = LinearMixedModel(@formula(rt_trunc ~ 1 + spkr + prec + load + (1|subj) + (1 + prec|item)),
+                            MixedModels.dataset(:kb07))
+    update!(fmkb2; subj=fmkb.reterms[2].λ, item=fmkb.reterms[1].λ)
+
+    vcu, vc = VarCorr(fmkb2), VarCorr(fmkb2)
+
+    @test all(values(vcu.σρ.subj.σ) .≈ values(vc.σρ.subj.σ))
+    @test all(values(vcu.σρ.subj.ρ) .≈ values(vc.σρ.subj.ρ))
+    @test all(values(vcu.σρ.item.σ) .≈ values(vc.σρ.item.σ))
+    @test all(values(vcu.σρ.item.ρ) .≈ values(vc.σρ.item.ρ))
+
 end

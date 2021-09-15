@@ -12,6 +12,8 @@ using MixedModels: replicate
 
 export
     create_re,
+    create_theta,
+    createθ,
     cyclicshift,
     factorproduct,
     flatlowertri,
