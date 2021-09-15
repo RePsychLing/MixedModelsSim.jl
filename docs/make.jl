@@ -7,8 +7,8 @@ makedocs(
     authors = "Phillip Alday, Douglas Bates, Lisa DeBruine, Reinhold Kliegl",
     pages = [
         "index.md",
-        "simulation.md",
-        "simulation_tutorial.md",
+        "Rapid Start" => "simulation.md",
+        "Beginner Friendly Tutorial" => "simulation_tutorial.md",
     ],
 )
 
