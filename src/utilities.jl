@@ -223,8 +223,8 @@ by the name of the blocking variable, e.g. `subj=create_re(...)`.
 
 Details
 ========
-The `re` used as the λ fields of the model's `ReTerm`s and should be specified
-as the lower Cholesky factor of covariance matrices.s
+The `re` is used as the λ fields of the model's `ReTerm`s and should be specified
+as the lower Cholesky factor of covariance matrices.
 """
 function update!(m::MixedModel; θ=nothing, namedre...)
     if θ === nothing
