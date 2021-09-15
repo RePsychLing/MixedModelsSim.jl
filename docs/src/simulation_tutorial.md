@@ -1,14 +1,17 @@
-Power Analysis and Simulation Tutorial
-======================================
+# Power Analysis and Simulation Tutorial
+
+*contributed by Lisa Schwetlick and Daniel Backhaus*
 
 This tutorial demonstrates how to conduct power analyses and data simulation using Julia and the MixedModelsSim package.
 
-Power analysis is an important tool for planning an experimental design. Here we show how to
+Power analysis is an important tool for planning an experimental design. Here we show how to:
 
-1. Take existing data and calculate power by simulating new data.
-2. Adapt parameters in a given Linear Mixed Model to analyze power without changing the existing data set.
+1. Use existing data as a basis for power calculations by simulating new data.
+2. Adapt parameters in a given linear mixed model to analyze power without changing the existing data set.
 3. Create a (simple) balanced fully crossed dataset from scratch and analyze power.
 4. Recreate a more complex dataset from scratch and analyze power for specific model parameter but various sample sizes.
+
+## Setup
 
 ### Load the packages we'll be using in Julia
 
@@ -20,10 +23,10 @@ using DisplayAs # so that things look REPL-y
 
 ```@example Main
 using MixedModels        # run mixed models
-using MixedModelsSim     # simulation functions for mixed models
-using DataFrames, Tables # work with data tables
+using MixedModelsSim     # simulation utilities
+using DataFrames, Tables # work with dataframes
 using StableRNGs         # random number generator
-using Statistics         # basic math funcions
+using Statistics         # basic statistical functions
 using DataFrameMacros    # dplyr-like operations
 using CairoMakie         # plotting package
 CairoMakie.activate!(type="svg") # use vector graphics
@@ -33,28 +36,32 @@ using ProgressMeter      # show progress in loops
 
 ### Define number of iterations
 
-Here we define how many model simulations we want to do. A large number will give more reliable results, but will take longer to compute. It is useful to set it to a low number for testing, and increase it for your final analysis.
+Here we define how many model simulations we want to do. A large number will give more reliable results, but will take longer to compute.
+It is useful to set it to a low number for testing, and increase it for your final analysis.
 
 ```@example Main
 # for real power analysis, set this much higher
 nsims = 100
 ```
 
-##  Take existing data and calculate power by simulate new data with bootstrapping.
+## Use existing data to simulate new data
 
-### Build a Linear Mixed Model from existing data.
+### Build a linear mixed model from existing data
 
-For the first example we are going to simulate bootstrapped data from an existing data set:
+For the first example we are going to simulate data bootstrapped  from an existing data set, namely Experiment 2 from
 
-*Experiment 2 from Kronmüller, E., & Barr, D. J. (2007). Perspective-free pragmatics: Broken precedents and the recovery-from-preemption hypothesis. Journal of Memory and Language, 56(3), 436-455.*
+!!! dataset
+    Kronmüller, E., & Barr, D. J. (2007). Perspective-free pragmatics: Broken precedents and the recovery-from-preemption hypothesis. Journal of Memory and Language, 56(3), 436-455.
 
-The data we will be using through out this tutorial is a study about how in a conversation the change of a speaker or the change of precedents (which are patterns of word usage to discribe an object, e.g. one can refer to the same object "white shoes", "runners", "sneakers") affects the understanding.
+This was an experiment about how in a conversation the change of a speaker or the change of precedents (which are patterns of word usage to describe an object, e.g. one can refer to the same object "white shoes", "runners", "sneakers") affects the understanding.
 
-Objects are presented on a screen while participants listen to instructions to move the objects around. Participants eye movements are tracked.
+In experiment, objects were presented on a screen while participants listened to instructions to move the objects around.
+Participants' eye movements were tracked.
 The dependent variable is response time, defined as the latency between the onset of the test description and the moment at which the target was selected.
-The independent variables are speaker (old vs. new), precedents (maintain vs. break) and cognitive load (a secondary memory task).
+The independent variables are speaker (old vs. new), precedents (maintain vs. break) and cognitive load (yes vs. no; from a secondary memory task).
 
-We have to load the data and define some characteristics like the contrasts and the underlying model.
+We first load the data and define some characteristics like the contrasts and the underlying model.
+This dataset is one of the example datasets provided by MixedModels.jl.
 
 Load existing data:
 ```@example Main
@@ -67,15 +74,18 @@ contrasts = Dict(:spkr => HelmertCoding(),
                  # set the reference level such that all the coefs
                  # have the same sign, which makes the plotting nicer
                  :prec => HelmertCoding(base="maintain"),
-                 :load => HelmertCoding());
+                 :load => HelmertCoding(),
+                 # pseudo-contrast for grouping variables
+                 :item => Grouping(),
+                 :subj => Grouping());
 ```
 
-The chosen LMM for this dataset is defined by the following model formula:
+The chosen linear mixed model (LMM) for this dataset is defined by the following model formula:
 ```@example Main
 kb07_f = @formula(rt_trunc ~ 1 + spkr + prec + load + (1|subj) + (1 + prec|item));
 ```
 
-Fit the model
+Fit the model:
 ```@example Main
 kb07_m = fit(MixedModel, kb07_f, kb07; contrasts=contrasts)
 DisplayAs.Text(ans) # hide
@@ -85,12 +95,19 @@ DisplayAs.Text(ans) # hide
 
 We will first look at the power of the dataset with the same parameters as in the original data set. This means that each dataset will have the exact number of observations as the original data. Here, we use the model `kb07_m` we fitted above to our dataset `kb07`.
 
-You can use the `parameparametricbootstrap()` function to run `nsims` iterations of data sampled using the parameters from `kb07_m`.
+You can use the `parametricbootstrap()` function to run `nsims` iterations of data sampled using the parameters from `kb07_m`.
+
+!!! info
+    The parametric bootstrap is actually a simulation procedure.
+    Each bootstrap iteration
+    1. simulates new data based on an existing model
+    2. then fits a model to that data to obtain new estimates.
+
 Set up a random seed to make the simulation reproducible. You can use your favourite number.
 
-To use multithreading, you need to set the number of cores you want to use.
-E.g. in Visual Studio Code, open the settings (gear icon in the lower left corner or cmd-,) and search for "thread".
-Set `julia.NumThreads` to the number of cores you want to use (at least 1 less than your total number).
+To use multithreading, you need to set the number of worker threads you want to use.
+In VS Code, open the settings (gear icon in the lower left corner) and search for "thread".
+Set `julia.NumThreads` to the number of threads you want to use (at least 1 less than the total number of processor cores available, so that you can continue watching YouTube while the simulation runs).
 
 
 Set random seed for reproducibility:
@@ -102,19 +119,22 @@ Run nsims iterations:
 ```@example Main
 kb07_sim = parametricbootstrap(rng, nsims, kb07_m; use_threads = false);
 ```
-**Try**: Run the code above with or without `use_threads = true`.
 
-The output DataFrame `kb07_sim` contains the results of the bootstrapping procedure.
+**Try**: Run the code above with or without `use_threads = true`. Did performance get better or worse? Check out the help information `parametricbootstrap` to see why!
+
+The returned value `kb07_sim` contains the results of the bootstrapping procedure, which we can convert to a dataframe
 
 ```@example Main
 df = DataFrame(kb07_sim.allpars);
-first(df, 9)
+first(df, 12)
+```
+
+The dataframe `df` has 4500 rows: 9 parameters, each from 500 iterations.
+```@example Main
 nrow(df)
 ```
 
-The dataframe df has 4500 rows: 9 parameters, each from 500 iterations.
-
-Plot some bootstrapped parameters:
+We can now plot some bootstrapped parameters:
 ```@example Main
 fig = Figure()
 
@@ -123,7 +143,7 @@ ax = Axis(fig[1,1:2]; xlabel = "residual standard deviation", ylabel = "Density"
 density!(ax, σres.value)
 
 βInt = @subset(df, :type == "β" && :names == "(Intercept)")
-ax = Axis(fig[1,3]; xlabel = "fixed effect for intercept", ylabel = "Density")
+ax = Axis(fig[1,3]; xlabel = "fixed effect for intercept")
 density!(ax, βInt.value)
 
 βSpeaker = @subset(df, :type == "β" && :names == "spkr: old")
@@ -131,11 +151,11 @@ ax = Axis(fig[2,1]; xlabel = "fixed effect for spkr: old", ylabel = "Density")
 density!(ax, βSpeaker.value)
 
 βPrecedents = @subset(df, :type == "β" && :names == "prec: break")
-ax = Axis(fig[2,2]; xlabel = "fixed effect for prec: break", ylabel = "Density")
+ax = Axis(fig[2,2]; xlabel = "fixed effect for prec: break")
 density!(ax, βPrecedents.value)
 
 βLoad = @subset(df, :type == "β" && :names == "load: yes")
-ax = Axis(fig[2,3]; xlabel = "fixed effect for load: yes", ylabel = "Density")
+ax = Axis(fig[2,3]; xlabel = "fixed effect for load: yes")
 density!(ax, βLoad.value)
 
 Label(fig[0,:]; text = "Parametric bootstrap replicates by parameter", textsize=25)
@@ -149,14 +169,9 @@ ridgeplot(kb07_sim; show_intercept=false)
 ```
 
 
-Convert p-values of your fixed-effects parameters to dataframe
+Next, we extract the p-values of the fixed-effects parameters into a dataframe
 ```@example Main
 kb07_sim_df = DataFrame(kb07_sim.coefpvalues);
-nothing # hide
-```
-
-Have a look at your simulated data:
-```@example Main
 first(kb07_sim_df, 8)
 ```
 
@@ -165,7 +180,7 @@ Now that we have a bootstrapped data, we can start our power calculation.
 ### Power calculation
 
 The function `power_table()` from `MixedModelsSim` takes the output of `parametricbootstrap()` and calculates the proportion of simulations where the p-value is less than alpha for each coefficient.
-You can set the `alpha` argument to change the default value of 0.05 (justify your alpha).
+You can set the `alpha` argument to change the default value of 0.05 ([justify your alpha](https://doi.org/10.1038/s41562-018-0311-x)).
 
 ```@example Main
 ptbl = power_table(kb07_sim, 0.05)
@@ -177,30 +192,34 @@ An estimated power of 0 means that for none of our iterations the specific param
 
 You can also do it manually:
 ```@example Main
-kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: break"),:]
-
-mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: break"),:p] .< 0.05)
+prec_p = kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: break"),:p]
+mean(prec_p .< 0.05)
 ```
 
-For nicely displaying, you can use `pretty_table`:
+For a nicer display, you can use `pretty_table`:
 ```@example Main
 pretty_table(ptbl)
 ```
 
-## Adapt parameters in a given Linear Mixed Model to analyze power without changing the existing data set.
+!!! warning
+    The simulation so far should not be interpreted as the power of the original K&B experiment.
+    [Observed power calculations are generally problematic.](https://doi.org/10.1198/000313001300339897)
+    Instead, the example so far should serve to show how power can be computed using a simulation procedure.
 
-Let's say we want to check our power to detect effects of spkr, prec, and load
-that are only half the size as in our pilot data. We can set a new vector of beta values
-with the `β` argument to `parametricbootstrap()`.
+In the next section, we show how to use previously observed data -- such as pilot data -- as the basis for a simulation study with a different effect size.
 
+## Adapt parameters in a given linear mixed model to analyze power without generating additional data
+
+Let's say we want to check our power to detect effects of spkr, prec, and load that are only half the size as in our pilot data.
+We can set a new vector of beta values (fixed effects) with the `β` argument to `parametricbootstrap()`.
 
 Specify β:
 ```@example Main
 new_beta = kb07_m.β
-new_beta[2:4] = kb07_m.β[2:4]/2
+new_beta[2:4] = kb07_m.β[2:4] / 2
 ```
 
-Run nsims iterations:
+Run simulations:
 ```@example Main
 kb07_sim_half = parametricbootstrap(StableRNG(42), nsims, kb07_m; β = new_beta, use_threads = false);
 ```
@@ -211,62 +230,72 @@ kb07_sim_half = parametricbootstrap(StableRNG(42), nsims, kb07_m; β = new_beta,
 power_table(kb07_sim_half)
 ```
 
-## Create a (simple) balanced fully crossed dataset from scratch and analyze power.
+## Create and analyze a (simple) balanced fully crossed dataset from scratch
 
-In some situations, instead of using an existing dataset it may be useful to simulate the data from scratch. This could be the case when the original data is not available but the effect sizes are known. That means that we have to:
+In some situations, instead of using an existing dataset it may be useful to simulate the data from scratch.
+This could be the case when pilot data or data from a previous study are not available.
+Note that we still have to assume (or perhaps guess) a particular effect size, which can be derived from previous work (whether experimental or practical).
+In the worst case, we can start from the smallest effect size that we would find interesting or meaningful.
 
-a) specify the effect sizes manually
+In order to simulate data from scratch, we have to:
 
-b) manually create an experimental design, according to which data can be simulated
+1. specify the effect sizes manually
+2. manually create an experimental design, according to which data can be simulated
 
-If we simulate data from scratch, aside from subject and item number, we can manipulate the arguments `β`, `σ` and `θ`.
+If we simulate data from scratch, we can manipulate the arguments `β`, `σ` and `θ` (in addition to the number of subjects and items)
 Lets have a closer look at them, define their meaning and we will see where the corresponding values in the model output are.
 
 ### Fixed Effects (βs)
-`β` are our effect sizes. If we look again on our LMM summary from the `kb07`-dataset `kb07_m`
+`β` are our effect sizes.
+
+If we look again on our LMM summary from the `kb07`-dataset `kb07_m`
 we see our four `β` under fixed-effects parameters in the `Coef.`-column.
 
 ```@example Main
 kb07_m
+DisplayAs.Text(ans) # hide
+```
+
+```@example Main
 kb07_m.β
 ```
 
+(These can also be accessed with the appropriately named `coef` function.)
+
 ### Residual Variance (σ)
 `σ` is the `residual`-standard deviation listed under the variance components.
+
 ```@example Main
-kb07_m
 kb07_m.σ
 ```
 
 ### Random Effects (θ)
-The meaning of `θ` is a bit less intuitive. In a less complex model (one that only has intercepts for the random effects) or if we suppress the correlations in the formula with `zerocorr()` then `θ` describes the relationship between the random effects standard deviation and the standard deviation of the residual term.
+The meaning of `θ` is a bit less intuitive. In a less complex model (one that only has intercepts for the random effects) or if we suppress the correlations in the formula with `zerocorr()` then `θ` describes the relationship between the standard deviation of the random effects and the residual standard deviation.
+
 In our `kb07_m` example:
-The `residual` standard deviation is `680.032`.
-The standard deviation of our first variance component *`item - (Intercept)`* is `364.713`.
-Thus our first `θ` is the relationship: variance component devided by `residual` standard deviation
-364.713 /  680.032 =  `0.53631`
+- The `residual` standard deviation is `680.032`.
+- The standard deviation of our first variance component *`item (Intercept)`* is `364.713`.
+- Thus our first `θ` is the relationship: variance component devided by `residual` standard deviation: ``364.713 /  680.032 =  0.53631``
 
 ```@example Main
 kb07_m.θ
 ```
 
-We also can calculate the `θ` for variance component *`subj - (Intercept)`*.
+We also can calculate the `θ` for variance component *`subj (Intercept)`*.
 The `residual` standard deviation is `680.032`.
-The standard deviation of our variance component *`subj - (Intercept)`* is `298.026`.
+The standard deviation of our variance component *`subj (Intercept)`* is `298.026`.
 Thus, the related θ is the relationship: variance component devided by `residual` standard deviation
 298.026 /  680.032 =  `0.438252`
 
-```@example Main
-kb07_m.θ
-```
+We can not calculate the `θ`s for variance component *`item prec: break`* this way, because it includes the correlation of
+*`item prec: break`* and *`item (Intercept)`*. But keep in mind that the relation of  *`item prec: break`*-variability (`252.521`)
+and the `residual`-variability (`680.032`) is ``252.521  /  680.032 =  0.3713369``.
 
-We can not calculate the `θ`s for variance component *`item - prec: break`* this way, because it includes the correlation of
-*`item - prec: break`* and *`item - (Intercept)`*. But keep in mind that the relation of  *`item - prec: break`*-variability (`252.521`)
-and the `residual`-variability (`680.032`) is 252.521  /  680.032 =  `0.3713369`.
-
-The `θ` vector is the flattened version of the variance-covariance matrix - a lowertrinangular matrix.
+The `θ` vector is the flattened version of the lower Cholesky factor variance-covariance matrix.
+The Cholesky factor is in some sense a "matrix square root" (so like storing standard deviations instead of variances) and is a lower triangular matrix.
 The on-diagonal elements are just the standard deviations (the `σ`'s). If all off-diagonal elements are zero, we can use our
-calculation above. The off-diagonal elements are covariances and correspond to the correlations (the `ρ`'s).
+calculation above.
+The off-diagonal elements are covariances and correspond to the correlations (the `ρ`'s).
 If they are unequal to zero, as it is in our `kb07`-dataset, one way to get the two missing `θ`-values is to take the values directly from the model we have already fitted.
 
 See the two inner values:
