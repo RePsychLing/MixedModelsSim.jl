@@ -312,7 +312,7 @@ Let's start by defining the correlation matrix for the `item`-part.
 The diagonal is always `1.0` because everything is perfectly correlated with itself.
 The elements below the diagonal follow the same form as the `Corr.` entries in the output of `VarCorr()`.
 In our example the correlation of
-*`item - prec: break`* and *`item - (Intercept)`* is `-0.7`.
+*`item prec: break`* and *`item (Intercept)`* is `-0.7`.
 The elements above the diagonal are just a mirror image.
 
 ```@example Main
@@ -328,14 +328,17 @@ re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
 
 ![Work flow for constructing theta vector](ThetaExplanation.png)
 
-Note: Don't be too specific with your values in create_re(). If there are rounding errors, you will get the error-message:
-`PosDefException: matrix is not Hermitian; Cholesky factorization failed.`
+!!! note
+    Don't be too specific with your values in `create_re()`.
+    Generally we don't these values very precisely because estimating them precisely requires large amounts of data.
+    Additionally, if there are numerical problems (rounding errors), you will get the error-message:
+    `PosDefException: matrix is not Hermitian; Cholesky factorization failed.`
 
-But you can extract the exact values like shown below:
+Although we advise against using these values, you can extract the exact values like so (just as a pedagogical demonstration):
 
 ```@example Main
 corr_exact = VarCorr(kb07_m).σρ.item.ρ[1]
-σ_residuals_exact = VarCorr(kb07_m).s
+σ_residuals_exact = kb07_m.σ
 σ_1_exact = VarCorr(kb07_m).σρ.item.σ[1] / σ_residuals_exact
 σ_2_exact = VarCorr(kb07_m).σρ.item.σ[2] / σ_residuals_exact
 
@@ -358,22 +361,28 @@ re_subj = create_re(0.438)
 If you want the exact value you can use
 
 ```@example Main
-σ_residuals_exact = VarCorr(kb07_m).s
+σ_residuals_exact = kb07_m.σ
 σ_3_exact = VarCorr(kb07_m).σρ.subj.σ[1] / σ_residuals_exact
 re_subj = create_re(σ_3_exact)
 ```
 
 As mentioned above `θ` is the compact form of these covariance matrices:
 
+
+
 ```@example Main
-kb07_m.θ = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
+createθ(kb07_m; item=re_item, subj=re_subj)
 ```
+
+The function `createθ` is putting the random effects into the correct order and then putting them into the compact form.
+Even for the same formula, the order may vary between datasets (and hence models fit to those datasets) because of a particular computational trick used in MixedModels.jl.
+Because of this trick, we need to specify the model along with the random effects so that the correct order can be determined.
 
 We can install these parameter in the `parametricbootstrap()`-function or in the model like this:
 
 ```@example Main
 # need the fully qualified name here because Makie also defines update!
-MixedModelsSim.update!(kb07_m, re_item, re_subj)
+MixedModelsSim.update!(kb07_m, item=re_item, subj=re_subj)
 DisplayAs.Text(ans) # hide
 ```
 
@@ -382,16 +391,15 @@ DisplayAs.Text(ans) # hide
 Having this knowledge about the parameters we can now **simulate data from scratch**
 
 The `simdat_crossed()` function from `MixedModelsSim` lets you set up a data frame with a specified experimental design.
-For now, it only makes fully balanced crossed designs!, but you can generate an unbalanced design by simulating data for the largest cell and deleting extra rows.
+For now, it only makes fully balanced crossed designs, but you can generate an unbalanced design by simulating data for the largest cell and deleting extra rows.
 
-
-Firstly we will set an easy design where `subj_n` subjects per `age` group (O or Y) respond to `item_n` items in each of two `condition`s (A or B).
+First, we will set an easy design where `subj_n` subjects per `age` group (`O`ld or `Y`oung) respond to `item_n` items in each of two `condition`s (A or B).
 
 Your factors need to be specified separately for between-subject, between-item, and within-subject/item factors using `Dict` with the name of each factor as the keys and vectors with the names of the levels as values.
 
 We start with the between subject factors:
 ```@example Main
-subj_btwn = Dict("age" => ["O", "Y"])
+subj_btwn = Dict(:age => ["O", "Y"])
 ```
 
 There are no between-item factors in this design so you can omit it or set it to nothing.
@@ -402,7 +410,7 @@ item_btwn = nothing
 
 Next, we put within-subject/item factors in a dict:
 ```@example Main
-both_win = Dict("condition" => ["A", "B"])
+both_win = Dict(:condition => ["A", "B"])
 ```
 
 Define subject and item number:
@@ -426,29 +434,31 @@ Have a look:
 first(DataFrame(dat),8)
 ```
 
-The values we see in the column `dv` is just random noise.
+The values we see in the column `dv` is just random noise (drawn from the standard normal distribution)
 
 Set contrasts:
 
 ```@example Main
 contrasts = Dict(:age => HelmertCoding(),
-                 :condition => HelmertCoding());
+                 :condition => HelmertCoding(),
+                 :subj => Grouping(),
+                 :item => Grouping());
 ```
 
 Define formula:
 
 ```@example Main
-f1 = @formula dv ~ 1 + age * condition + (1|item) + (1|subj);
+f1 = @formula(dv ~ 1 + age * condition + (1|item) + (1|subj));
 ```
 
 Note that we did not include condition as random slopes for item and subject.
-This is mainly to keep the example simple and to keep the parameter `θ` easier to understand (see Section 3 for the explanation of theta).
+This is mainly to keep the example simple and to keep the parameter `θ` easier to understand (see Section 3 above for the explanation of θ).
 
 
 Fit the model:
 
 ```@example Main
-m1 = fit(MixedModel, f1, dat, contrasts=contrasts)
+m1 = fit(MixedModel, f1, dat; contrasts=contrasts)
 DisplayAs.Text(ans) # hide
 ```
 
@@ -472,11 +482,11 @@ new_theta = [1.0, 1.0]
 
 Run nsims iterations:
 ```@example Main
-sim1 = parametricbootstrap(rng, nsims, m1,
-                        β = new_beta,
-                        σ = new_sigma,
-                        θ = new_theta,
-                        use_threads = false);
+sim1 = parametricbootstrap(rng, nsims, m1;
+                           β = new_beta,
+                           σ = new_sigma,
+                           θ = new_theta,
+                           use_threads = false);
 ```
 
 ### Power calculation
@@ -490,7 +500,7 @@ For nicely displaying it, you can use pretty_table:
 pretty_table(ptbl)
 ```
 
-## Recreate a more complex dataset from scratch and analyze power for specific model parameter but various sample sizes.
+## Compute power curves for a more complex dataset
 
 ### Recreate the `kb07`-dataset from scratch
 
@@ -508,40 +518,21 @@ Define factors in a dict:
 ```@example Main
 subj_btwn = nothing
 item_btwn = nothing
-both_win = Dict("spkr" => ["old", "new"],
-                "prec" => ["maintain", "break"],
-                "load" => ["yes", "no"]);
+both_win = Dict(:spkr => ["old", "new"],
+                :prec => ["maintain", "break"],
+                :load => ["yes", "no"]);
 ```
 
-### **Try**: Play with `simdat_crossed`.
+**Try**: Play with `simdat_crossed`.
 
-```@example Main
-subj_btwn = Dict("spkr" => ["old", "new"],
-                "prec" => ["maintain", "break"],
-                "load" => ["yes", "no"]);
-item_btwn = nothing
-both_win = nothing;
-
-subj_n = 56
-item_n = 32
-
-fake_kb07 = simdat_crossed(subj_n, item_n,
-                     subj_btwn = subj_btwn,
-                     item_btwn = item_btwn,
-                     both_win = both_win);
-
-
-fake_kb07_df = DataFrame(fake_kb07);
-nothing # hide
-```
 
 Simulate data:
 
 ```@example Main
 fake_kb07 = simdat_crossed(subj_n, item_n,
-                     subj_btwn = subj_btwn,
-                     item_btwn = item_btwn,
-                     both_win = both_win);
+                           subj_btwn = subj_btwn,
+                           item_btwn = item_btwn,
+                           both_win = both_win);
 ```
 
 Make a dataframe:
@@ -558,29 +549,34 @@ first(fake_kb07_df,8)
 ```
 
 The function `simdat_crossed` generates a balanced fully crossed design.
-Unfortunately, our original design is not balanced fully crossed. Every subject saw an image only once, thus in one of eight possible conditions. To simulate that we only keep one of every eight lines.
+Unfortunately, our original design is not balanced fully crossed.
+Every subject saw an image only once, thus in one of eight possible conditions.
+To simulate that we only keep one of every eight lines.
 
 We sort the dataframe to enable easier selection
 
 ```@example Main
-fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
+sort!(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
 nothing # hide
 ```
 
-In order to select only the relevant rows of the data set we define an index which represents a random choice of one of every eight rows. First we generate a vector `idx` which represents which row to keep in each set of 8.
+In order to select only the relevant rows of the data set we define an index which represents a random choice of one of every eight rows.
+First we generate a vector `idx` which represents which row to keep in each set of 8.
 
 ```@example Main
-len = convert(Int64,(length(fake_kb07)/8))
-idx = rand(rng, collect(1:8) , len)
+len = div(length(fake_kb07), 8) # integer division
+idx = rand(rng, 1:8 , len)
+show(idx)
 ```
 
 Then we create an array `A`, of the same length that is populated multiples of the number 8. Added together `A` and `idx` give the indexes of one row from each set of 8s.
 
 ```@example Main
 A = repeat([8], inner=len-1)
-A = append!( [0], A )
+push!(A, 0)
 A = cumsum(A)
-idx = idx+A
+idx = idx .+ A
+show(idx)
 ```
 
 Reduce the balanced fully crossed design to the original experimental design:
@@ -598,19 +594,21 @@ Set contrasts:
 ```@example Main
 contrasts = Dict(:spkr => HelmertCoding(),
                  :prec => HelmertCoding(),
-                 :load => HelmertCoding());
+                 :load => HelmertCoding(),
+                 :item => Grouping(),
+                 :subj => Grouping());
 ```
 
 Define formula, same as above:
 
 ```@example Main
-kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
+kb07_f = @formula(rt_trunc ~ 1 + spkr + prec + load + (1|subj) + (1+prec|item));
 ```
 
 Fit the model:
 
 ```@example Main
-fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df, contrasts=contrasts)
+fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df; contrasts=contrasts)
 DisplayAs.Text(ans) # hide
 ```
 
@@ -636,8 +634,7 @@ new_sigma = kb07_m.σ #grab from existing model
 re_item_corr = [1.0 -0.7; -0.7 1.0]
 re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
 re_subj = create_re(0.438)
-new_theta = vcat( flatlowertri(re_item), flatlowertri(re_subj) )  #manual
-new_theta = kb07_m.θ #grab from existing model
+new_theta = createθ(kb07_m; item=re_item, subj=re_subj)
 ```
 
 
@@ -716,8 +713,9 @@ new_sigma = kb07_m.σ
 re_item_corr = [1.0 -0.7; -0.7 1.0]
 re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
 re_subj = create_re(0.438)
-new_theta = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
-new_theta = kb07_m.θ
+# because the ordering in theta is dependent on the design,
+# we will create it within the loop as we change the design parameters
+# (e.g. n subjects and n items)
 ```
 
 
@@ -734,6 +732,7 @@ Make an empty dataframe:
 
 ```@example Main
 d = DataFrame();
+nothing # hide
 ```
 
 ### Run the loop:
@@ -752,7 +751,7 @@ d = DataFrame();
     local len = convert(Int64,(length(fake)/8))
     local idx = rand(rng, collect(1:8) , len)
     local A = repeat([8], inner=len-1)
-    A = append!([0], A)
+    push!(A, 0)
     A = cumsum(A)
     idx = idx + A
     fake_df = fake_df[idx, :]
@@ -760,7 +759,7 @@ d = DataFrame();
 
     # create the model:
     fake_m = LinearMixedModel(kb07_f, fake_df, contrasts=contrasts);
-
+    local new_theta = createθ(fake_m; item=re_item, subj=re_subj)
     # Run nsims iterations:
     fake_sim = parametricbootstrap(rng, nsims, fake_m,
                                    β = new_beta,
@@ -782,7 +781,7 @@ nothing # hide
 Our dataframe `d` now contains the power information for each combination of subjects and items.
 
 ```@example Main
-print(d)
+first(d, 10)
 ```
 
 Lastly we plot our results:
@@ -806,7 +805,8 @@ Colorbar(fig[1, end+1]; label="power", vertical=true, colorrange=[0,1], colormap
 fig
 ```
 
-# Credit
-This tutorial was conceived for ZiF research and tutorial workshop by Lisa DeBruine (Feb. 2020) presented again by Phillip Alday during the SMLP Summer School (Sep. 2020).
+## Acknowledgements
+
+The text here is based on a tutorial presented at a ZiF workshop by Lisa DeBruine (Feb. 2020) and presented again by Phillip Alday during the SMLP Summer School (Sep. 2020).
 
 Updated and extended by Lisa Schwetlick & Daniel Backhaus, with the kind help of Phillip Alday, after changes to the package.
