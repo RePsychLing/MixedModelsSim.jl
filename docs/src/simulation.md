@@ -112,33 +112,45 @@ re_subj = create_re(1.5, 0.5, 0.75)
 ```
 
 We can check that we got these right by installing these parameter values into the model.
-Note that we have to specify them in the same order as in the output from `VarCorr`.
 ```@example Main
-update!(m0, re_item, re_subj)
+update!(m0; subj=re_subj, item=re_item)
 VarCorr(m0)
 ```
 
 Looks good. The values don't exactly match the values in our parameter vector because the
 residual standard deviation isn't exactly 1.0.
 
-For the actual simulation, we'll need the compact form of these covariance matrices that MixedModels.jl stores uses internally.
+For the actual simulation, we'll need the compact form of these covariance matrices that MixedModels.jl uses internally.
 This compact form is the parameter vector θ and we can get it back out of the model where we just installed it:
 ```@example Main
-θ = m0.θ
+show(m0.θ)
 ```
 
-Alternatively, we could also create it directly from the covariance matrices we created:
+Alternatively, we can also just generate θ directly from the random-effects matrices:
 ```@example Main
-vcat( flatlowertri(re_item), flatlowertri(re_subj) )
+θ = createθ(m0; subj=re_subj, item=re_item)
+show(θ)
 ```
+
+We could also create it directly from the covariance matrices we created, but in this case we need to make sure they're in the same order as in the `VarCorr` output:
+```@example Main
+θhand = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
+show(θhand)
+```
+
+!!! warning
+    In storing the parameter vector θ, MixedModels.jl uses an ordering that yields maximum sparseness, which enables better computational efficiency.
+    The ordering is thus dependent on the entirety of the design -- both the choice of the random effects and the relative number of subjects and items.
+    For this reason, we strongly recommend using the helper methods that allow specifying the grouping variable by name.
 
 ## Assemble the Fixed Effects
 
 The last two components we need are the residual variance and the effect sizes for the fixed effects.
 
 ```@example Main
-σ = 5
-β = [1.0, -1.0, 2.0, -1.5, 0.3, -1.3, 1.4, 0]
+σ = 5;
+β = [1.0, -1.0, 2.0, -1.5, 0.3, -1.3, 1.4, 0];
+nothing # hide
 ```
 
 The entries in the β correspond to the coefficients in the model given by
@@ -159,6 +171,13 @@ In MixedModels.jl, you can specify different parameter values, such as the ones
 # but we want to be quick in this example
 sim = parametricbootstrap(MersenneTwister(12321), 20, m0; β=β, σ=σ, θ=θ)
 ```
+
+As mentioned above, the ordering within θ is dependent on the entire design, so if you embed the simulation code in a loop iterating over different numbers of subjects and items, it's probably better to write it as:
+```julia
+sim = parametricbootstrap(MersenneTwister(12321), 20, m0;
+                          β=β, σ=σ, θ=createθ(m0; subj=re_subj, item=re_item))
+```
+
 ## See your power and profit!
 
 Finally, we can turn this into a power table:
