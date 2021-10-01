@@ -2,13 +2,13 @@ using Documenter
 using MixedModelsSim
 
 makedocs(
-    root = joinpath(dirname(pathof(MixedModelsSim)), "..", "docs"),
     sitename = "MixedModelsSim.jl",
     doctest = true,
     authors = "Phillip Alday, Douglas Bates, Lisa DeBruine, Reinhold Kliegl",
     pages = [
         "index.md",
-        "simulation.md",
+        "Rapid Start" => "simulation.md",
+        "Beginner Friendly Tutorial" => "simulation_tutorial.md",
     ],
 )
 
