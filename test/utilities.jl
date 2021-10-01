@@ -38,6 +38,11 @@ end
     @test length(twofac) == 3
     @test length(first(twofac)) == 18
     @test_throws ArgumentError nlevstbl(:item, 18, :level => ["low", "high"], :blur => ["N", "Y"])
+
+    item = nlevstbl(:subj, 128, :trt => ["C", "T"])
+    @test item.subj isa PooledVector{String, Int16, Vector{Int16}}
+    @test item.trt isa PooledVector{String, Int8, Vector{Int8}}
+    @test length(item.subj) == length(item.trt)
 end
 
 @testset "pooled!" begin

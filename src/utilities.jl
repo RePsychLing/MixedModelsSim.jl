@@ -99,7 +99,9 @@ julia> nlevstbl(:item, 9, :level => ["low", "medium", "high"])
 """
 function nlevstbl(nm::Symbol, n::Integer, vars::Pair{Symbol, Vector{String}}...)
     nms = [nm]
-    vals = [PooledArray(nlevels(n, uppercase(first(string(nm)))), signed=true, compress=true)]
+    # need to specify PooledArray[] so that the array doesn't specialize on
+    # PooledArrays's type parameters
+    vals = PooledArray[PooledArray(nlevels(n, uppercase(first(string(nm)))); signed=true, compress=true)]
     inner = 1
     for var in vars
         levs = last(var)
@@ -107,7 +109,7 @@ function nlevstbl(nm::Symbol, n::Integer, vars::Pair{Symbol, Vector{String}}...)
         rept = inner * nlev
         q, r = divrem(n, rept)
         iszero(r) || throw(ArgumentError("n = $n is not a multiple of repetition block size $rept"))
-        push!(vals, PooledArray(repeat(levs, inner=inner, outer=q), signed=true, compress=true))
+        push!(vals, PooledArray(repeat(levs, inner=inner, outer=q); signed=true, compress=true))
         push!(nms, first(var))
         inner = rept
     end
