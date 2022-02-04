@@ -281,6 +281,7 @@ random effects.
     [`update!`](@ref) requires.
 """
 function create_re(sigmas...; corrmat=nothing)
+    @assert all(>(0),sigmas) "all σs must be positive"
     ss = Diagonal([sigmas...])
 
     isnothing(corrmat) ? LowerTriangular(ss) : ss * cholesky(Symmetric(corrmat, :L)).L
