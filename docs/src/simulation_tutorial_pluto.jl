@@ -11,7 +11,7 @@ begin
 	using DataFrames, Tables # work with data tables
 	using StableRNGs         # random number generator
 	using CSV                # write CSV files
-	using Statistics         # basic math funcions
+	using Statistics         # basic math functions
 	using DataFramesMeta     # dplyr-like operations
 	using Gadfly             # plotting package
 	using PlutoUI
@@ -59,7 +59,7 @@ For the first example we are going to simulate bootstrapped data from an existin
 
 *Experiment 2 from Kronmüller, E., & Barr, D. J. (2007). Perspective-free pragmatics: Broken precedents and the recovery-from-preemption hypothesis. Journal of Memory and Language, 56(3), 436-455.*
 
-The data we will be using through out this tutorial is a study about how in a conversation the change of a speaker or the change of precedents (which are patterns of word usage to discribe an object, e.g. one can refer to the same object "white shoes", "runners", "sneakers") affects the understanding.
+The data we will be using through out this tutorial is a study about how in a conversation the change of a speaker or the change of precedents (which are patterns of word usage to describe an object, e.g. one can refer to the same object "white shoes", "runners", "sneakers") affects the understanding.
 
 Objects are presented on a screen while participants listen to instructions to move the objects around. Participants eye movements are tracked.
 The dependent variable is response time, defined as the latency between the onset of the test description and the moment at which the target was selected.
@@ -335,7 +335,7 @@ The meaning of `θ` is a bit less intuitive. In a less complex model (one that o
 In our `kb07_m` example:
 The `residual` standard deviation is `680.032`.
 The standard deviation of our first variance component *`item - (Intercept)`* is `364.713`.
-Thus our first `θ` is the relationship: variance component devided by `residual` standard deviation
+Thus our first `θ` is the relationship: variance component divided by `residual` standard deviation
 364.713 /  680.032 =  `0.53631`
 """
 
@@ -347,7 +347,7 @@ md"""
 We also can calculate the `θ` for variance component *`subj - (Intercept)`*.
 The `residual` standard deviation is `680.032`.
 The standard deviation of our variance component *`subj - (Intercept)`* is `298.026`.
-Thus, the related θ is the relationship: variance component devided by `residual` standard deviation
+Thus, the related θ is the relationship: variance component divided by `residual` standard deviation
 298.026 /  680.032 =  `0.438252`
 """
 
