@@ -275,7 +275,7 @@ The meaning of `θ` is a bit less intuitive. In a less complex model (one that o
 In our `kb07_m` example:
 - The `residual` standard deviation is `680.032`.
 - The standard deviation of our first variance component *`item (Intercept)`* is `364.713`.
-- Thus our first `θ` is the relationship: variance component devided by `residual` standard deviation: ``364.713 /  680.032 =  0.53631``
+- Thus our first `θ` is the relationship: variance component divided by `residual` standard deviation: ``364.713 /  680.032 =  0.53631``
 
 ```@example Main
 kb07_m.θ
@@ -284,7 +284,7 @@ kb07_m.θ
 We also can calculate the `θ` for variance component *`subj (Intercept)`*.
 The `residual` standard deviation is `680.032`.
 The standard deviation of our variance component *`subj (Intercept)`* is `298.026`.
-Thus, the related θ is the relationship: variance component devided by `residual` standard deviation
+Thus, the related θ is the relationship: variance component divided by `residual` standard deviation
 298.026 /  680.032 =  `0.438252`
 
 We can not calculate the `θ`s for variance component *`item prec: break`* this way, because it includes the correlation of
