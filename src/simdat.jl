@@ -96,7 +96,7 @@ function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
         win_prod = Iterators.product(wc...)
         win_vals = columntable(win_prod) |> collect
         win_names = collect(keys(both_win))
-        win = (; (Symbol(k) => v for (k,v) in zip(win_names, win_vals))...)        
+        win = (; (Symbol(k) => v for (k,v) in zip(win_names, win_vals))...)
 
         if (isempty(both_between))
             # cross the subject and item tables with any within factors
