@@ -20,7 +20,6 @@ Dict(
     :factor2_name => ["F2_level1", "F2_level2", "F2_level3"]
 )
 ```
-The order of columns is typically: :subj, subject-within/between conditions, :item, item-within/between conditions, :dv
 
 In addition to design, the rowtable contains a field `dv` pre-populated
 with N(0,1) noise as a basis for further simulating a design.
@@ -77,18 +76,18 @@ function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
     if isnothing(subj_btwn) || isnothing(item_btwn)
         both_between = []
     else
-        both_between = intersect(keys(subj_btwn),keys(item_btwn))
+        both_between = intersect(keys(subj_btwn), keys(item_btwn))
     end
 
     # Case where there are not factors that are both within subject and within item
-    if(isnothing(both_win))
+    if isnothing(both_win)
         # and there are no factors that are both between subject and between item
-        if (isempty(both_between))
+        if isempty(both_between)
             # cross the subject and item tables
             design = factorproduct(subj, item)
         else
             # make sure that each subject/item is only in one level of the between subject/between item factor
-            design = [merge(x, y) for x in rowtable(subj), y in rowtable(item) if all( [x[var] == y[var] for var in both_between] )]
+            design = [merge(x, y) for x in rowtable(subj), y in rowtable(item) if all(x[var] == y[var] for var in both_between)]        
         end
     else
         # set up within both table
@@ -98,12 +97,12 @@ function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
         win_names = collect(keys(both_win))
         win = (; (Symbol(k) => v for (k,v) in zip(win_names, win_vals))...)
 
-        if (isempty(both_between))
+        if isempty(both_between)
             # cross the subject and item tables with any within factors
             design = factorproduct(subj, item, win)
         else
             # make sure that each subject/item is only in one level of the between subject/between item factor
-            design = [merge(x, y, z) for x in rowtable(subj), y in rowtable(item), z in rowtable(win) if all( [x[var] == y[var] for var in both_between] )]
+            design = [merge(x, y, z) for x in rowtable(subj), y in rowtable(item), z in rowtable(win) if all(x[var] == y[var] for var in both_between)]
         end
     end
 

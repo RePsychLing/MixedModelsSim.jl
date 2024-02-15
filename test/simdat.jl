@@ -67,12 +67,10 @@ end;
 
 @testset "simdat_crossed between-subjects between-items - complex case" begin
     # stimulate data for a case in which a factor is both between-subject and between-item
-    subj_btwn = Dict(:age => ["O", "Y"],
-                     :cond1 => ["A", "B"],
+    both_btwn = Dict(:cond1 => ["A", "B"],
                      :cond2 => ["C", "D", "E"])
-    item_btwn = Dict(:pet => ["cat", "dog"],
-                     :cond1 => ["A", "B"],
-                     :cond2 => ["C", "D", "E"])
+    subj_btwn = merge(Dict(:age => ["O", "Y"]), both_btwn)                    
+    item_btwn = merge(Dict(:pet => ["cat", "dog"]), both_btwn)
     both_win = Dict(:time => ["morning", "evening"])
 
     subj_n = 12
@@ -96,12 +94,10 @@ end;
 end;
 
 @testset "simdat_crossed test all combinations" begin
-        subj_btwn = Dict(:age => ["O", "Y"], # -> item within
-                     :cond1 => ["A", "B"],
+    both_btwn = Dict(:cond1 => ["A", "B"],
                      :cond2 => ["C", "D", "E"])
-    item_btwn = Dict(:pet => ["cat", "dog"], # -> subject within
-                     :cond1 => ["A", "B"],
-                     :cond2 => ["C", "D", "E"])
+    subj_btwn = merge(Dict(:age => ["O", "Y"]), both_btwn)                    
+    item_btwn = merge(Dict(:pet => ["cat", "dog"]), both_btwn)
     both_win = Dict(:time => ["morning", "evening"])
 
 
@@ -111,9 +107,9 @@ end;
         subj_btwn=subj_btwn,
         item_btwn=item_btwn,
         both_win=both_win))
-    s2 = subset(data, :subj => x -> x .== "S02")    
-    @test all(s2.cond1 .== "A")
-    @test all(s2.age .== "Y")
+    s2 = subset(data, :subj => ByRow(==("S02")))
+    @test all(==("A"), s2.cond1)
+    @test all(==("Y"), s2.age)
     @test length(unique(s2.pet)) == 2 # from item between
     
     #-----
@@ -123,12 +119,12 @@ end;
         both_win=both_win))
 
     @test nrow(data) == 288 # many more rows because many more effects are within-subject
-    s2 = subset(data, :subj => x -> x .== "S02")
+    s2 = subset(data, :subj => ByRow(==("S02")))
     @test length(unique(string.(s2.cond1) .* string.(s2.cond2))) == 6 # test all 6 combinations are there
     @test length(unique(s2.cond1)) == 2 # now we have both conditions within subject
 
-    i2 = subset(data, :item => x -> x .== "I02")
-    @test all(i2.cond1 .== "A") # but only one because cond1 is between-items here
+    i2 = subset(data, :item => ByRow(==("I02")))
+    @test all(==("A"), i2.cond1) # but only one because cond1 is between-items here
 
 
     #-----
@@ -137,21 +133,18 @@ end;
         subj_btwn=subj_btwn,
         both_win=both_win))
     @test nrow(data) == 288 # many more rows because many more effects are within-subject
-    i2 = subset(data, :item => x -> x .== "I02")
+    i2 = subset(data, :item => ByRow(==("I02")))
     @test length(unique(string.(i2.cond1) .* string.(i2.cond2))) == 6 # test all 6 combinations are there
     @test length(unique(i2.cond1)) == 2 # now we have both conditions within item
     
-    s2 = subset(data, :subj => x -> x .== "S02")
+    s2 = subset(data, :subj => ByRow(==("S02")))
     @test all(s2.cond1 .== "A") # but only one because cond1 is between-subject here
 
-
-
     #---------
-    data = DataFrame(simdat_crossed(subj_n, item_n,
-        both_win=both_win))
-    @test nrow(data) == subj_n*item_n*2
-    i2 = subset(data, :item => x -> x .== "I02")
-    s2 = subset(data, :subj => x -> x .== "S02")
+    data = DataFrame(simdat_crossed(subj_n, item_n; both_win))
+    @test nrow(data) == subj_n * item_n * 2
+    i2 = subset(data, :item => ByRow(==("I02")))
+    s2 = subset(data, :subj => ByRow(==("S02")))
     @test length(unique(i2.subj)) == 12
     @test length(unique(s2.item)) == 12
 
@@ -163,11 +156,9 @@ end;
 
 
     #-----
-    data = DataFrame(simdat_crossed(subj_n, item_n,
-        subj_btwn=subj_btwn,
-        item_btwn=item_btwn))
+    data = DataFrame(simdat_crossed(subj_n, item_n; subj_btwn, item_btwn))
     @test nrow(data) == 24
-    i2 = subset(data, :item => x -> x .== "I02")
+    i2 = subset(data, :item => ByRow(==("I02")))
     @test nrow(i2) == 2
     @test length(unique(i2.subj)) == 2 # because age is within item, but between subjects, we have two subjects here
     @test length(unique(i2.age)) == 2 # because age is within item
@@ -176,10 +167,10 @@ end;
     data = DataFrame(simdat_crossed(subj_n, item_n,
         subj_btwn=subj_btwn))
     @test nrow(data) == 12*12
-    i2 = subset(data, :item => x -> x .== "I02")
+    i2 = subset(data, :item => ByRow(==("I02")))
     @test length(unique(i2.subj)) == 12
     @test length(unique(i2.cond1 .* i2.cond2 .* i2.age)) == 12 # everything is within item
-    s2 = subset(data, :subj => x -> x .== "S02")
+    s2 = subset(data, :subj => ByRow(==("S02")))
     @test length(unique(i2.subj)) == 12
     @test length(unique(s2.cond1 .* s2.cond2 .* s2.age)) == 1 # everything is within item
     
@@ -187,10 +178,10 @@ end;
     data = DataFrame(simdat_crossed(subj_n, item_n,
         item_btwn=item_btwn))
     @test nrow(data) == 12 * 12
-    i2 = subset(data, :item => x -> x .== "I02")
+    i2 = subset(data, :item => ByRow(==("I02")))
     @test length(unique(i2.subj)) == 12
     @test length(unique(i2.cond1 .* i2.cond2 .* i2.pet)) == 1 # everything is within item
-    s2 = subset(data, :subj => x -> x .== "S02")
+    s2 = subset(data, :subj => ByRow(==("S02")))
     @test length(unique(i2.subj)) == 12
     @test length(unique(s2.cond1 .* s2.cond2 .* s2.pet)) == 12 # everything is within item
 
