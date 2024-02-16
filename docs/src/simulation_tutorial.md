@@ -158,7 +158,7 @@ density!(ax, βPrecedents.value)
 ax = Axis(fig[2,3]; xlabel = "fixed effect for load: yes")
 density!(ax, βLoad.value)
 
-Label(fig[0,:]; text = "Parametric bootstrap replicates by parameter", textsize=25)
+Label(fig[0,:]; text = "Parametric bootstrap replicates by parameter", fontsize=25)
 
 fig
 ```
