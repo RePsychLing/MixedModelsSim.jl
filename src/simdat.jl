@@ -72,19 +72,38 @@ function simdat_crossed(rng::AbstractRNG, subj_n=1, item_n=1;
     item_names = vcat(["item"], ib_vars)
     item = (; (Symbol(k) => v for (k,v) in zip(item_names, item_vals))...)
 
-    # set up within both table
-    if (isnothing(both_win))
-        # cross the subject and item tables
-        design = factorproduct(subj, item)
+    # Check whether there are experimental factors which are both between-subject and between-item
+    if isnothing(subj_btwn) || isnothing(item_btwn)
+        both_between = []
     else
+        both_between = intersect(keys(subj_btwn), keys(item_btwn))
+    end
+
+    # Case where there are not factors that are both within subject and within item
+    if isnothing(both_win)
+        # and there are no factors that are both between subject and between item
+        if isempty(both_between)
+            # cross the subject and item tables
+            design = factorproduct(subj, item)
+        else
+            # make sure that each subject/item is only in one level of the between subject/between item factor
+            design = [merge(x, y) for x in rowtable(subj), y in rowtable(item) if all(x[var] == y[var] for var in both_between)]        
+        end
+    else
+        # set up within both table
         wc = values(both_win) |> collect
         win_prod = Iterators.product(wc...)
         win_vals = columntable(win_prod) |> collect
         win_names = collect(keys(both_win))
         win = (; (Symbol(k) => v for (k,v) in zip(win_names, win_vals))...)
 
-        # cross the subject and item tables with any within factors
-        design = factorproduct(subj, item, win)
+        if isempty(both_between)
+            # cross the subject and item tables with any within factors
+            design = factorproduct(subj, item, win)
+        else
+            # make sure that each subject/item is only in one level of the between subject/between item factor
+            design = [merge(x, y, z) for x in rowtable(subj), y in rowtable(item), z in rowtable(win) if all(x[var] == y[var] for var in both_between)]
+        end
     end
 
     dv = randn(rng, length(design))
