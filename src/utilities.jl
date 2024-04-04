@@ -40,7 +40,7 @@ julia> DataFrame(factorproduct((item=nlevels(3,'I'),), (subj=nlevels(5), age=["Y
 factorproduct(facs...) = factorproduct(Val(:rowtable), facs...)
 
 function factorproduct(::Val{:rowtable}, facs...)
-    vec([merge(s...) for s in Iterators.product(rowtable.(facs)...)])
+    return vec([merge(s...) for s in Iterators.product(rowtable.(facs)...)])
 end
 
 # currently not more efficient, but reserving this use for later efficiency improvements
@@ -59,7 +59,7 @@ cyclicshift('a':'d', 8)
 function cyclicshift(v::AbstractVector, nrow)
     # The return value i used to counterbalance levels of conditions in [`withinitem`](@ref).
     vlen = length(v)
-    [v[1 + (i + j) % vlen] for i in 0:(nrow - 1), j in 0:(vlen - 1)]
+    return [v[1 + (i + j) % vlen] for i in 0:(nrow - 1), j in 0:(vlen - 1)]
 end
 
 """
@@ -74,7 +74,7 @@ julia> show(nlevels(10))
 ```
 """
 function nlevels(nlev, tag='S')
-    string.(tag, lpad.(1:nlev, ndigits(nlev), '0'))
+    return string.(tag, lpad.(1:nlev, ndigits(nlev), '0'))
 end
 
 """
@@ -97,23 +97,26 @@ julia> nlevstbl(:item, 9, :level => ["low", "medium", "high"])
 (item = ["I1", "I2", "I3", "I4", "I5", "I6", "I7", "I8", "I9"], level = ["low", "medium", "high", "low", "medium", "high", "low", "medium", "high"])
 ```
 """
-function nlevstbl(nm::Symbol, n::Integer, vars::Pair{Symbol, Vector{String}}...)
+function nlevstbl(nm::Symbol, n::Integer, vars::Pair{Symbol,Vector{String}}...)
     nms = [nm]
     # need to specify PooledArray[] so that the array doesn't specialize on
     # PooledArrays's type parameters
-    vals = PooledArray[PooledArray(nlevels(n, uppercase(first(string(nm)))); signed=true, compress=true)]
+    vals = PooledArray[PooledArray(nlevels(n, uppercase(first(string(nm)))); signed=true,
+                                   compress=true)]
     inner = 1
     for var in vars
         levs = last(var)
         nlev = length(levs)
         rept = inner * nlev
         q, r = divrem(n, rept)
-        iszero(r) || throw(ArgumentError("n = $n is not a multiple of repetition block size $rept"))
-        push!(vals, PooledArray(repeat(levs, inner=inner, outer=q); signed=true, compress=true))
+        iszero(r) ||
+            throw(ArgumentError("n = $n is not a multiple of repetition block size $rept"))
+        push!(vals,
+              PooledArray(repeat(levs; inner=inner, outer=q); signed=true, compress=true))
         push!(nms, first(var))
         inner = rept
     end
-    NamedTuple{(nms...,)}((vals...,))
+    return NamedTuple{(nms...,)}((vals...,))
 end
 
 """
@@ -152,9 +155,8 @@ Returns the lower triangular flattened into 1D array in column-major order.
 """
 function flatlowertri(l::LowerTriangular)
     rr, cc = size(l)
-    return [l[i, j] for j = 1:cc for i = j:rr]
+    return [l[i, j] for j in 1:cc for i in j:rr]
 end
-
 
 """
     _update!(m::MixedModel, θ)
@@ -172,8 +174,6 @@ Update the mixed model to use θ as its new parameter vector.
 _update!(m::LinearMixedModel, θ) = updateL!(MixedModels.setθ!(m, θ))
 _update!(m::GeneralizedLinearMixedModel, θ) = pirls!(MixedModels.setθ!(m, θ), false)
 # arguably type piracy, but we're all the same developers....
-
-
 
 """
     update!(m::MixedModel, re...)
@@ -259,7 +259,7 @@ function createθ(m::MixedModel; named_re...)
     end
 
     return mapfoldl(vcat, fns) do fname
-        flatlowertri(newre[fname])
+        return flatlowertri(newre[fname])
     end
 end
 
@@ -284,9 +284,9 @@ function create_re(sigmas...; corrmat=nothing)
     all(>=(0), sigmas) || throw(ArgumentError("all σs must be non negative"))
     ss = Diagonal([sigmas...])
 
-    isnothing(corrmat) ? LowerTriangular(ss) : ss * cholesky(Symmetric(corrmat, :L)).L
+    return isnothing(corrmat) ? LowerTriangular(ss) :
+           ss * cholesky(Symmetric(corrmat, :L)).L
 end
-
 
 # """
 #     withinitem(nitem, df)
