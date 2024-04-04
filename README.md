@@ -4,8 +4,7 @@
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://RePsychLing.github.io/MixedModelsSim.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://RePsychLing.github.io/MixedModelsSim.jl/dev)
-![T1-url][T1-img]
-![T2-url][T2-img]
+[![CI](https://github.com/RePsychLing/MixedModelsSim.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/RePsychLing/MixedModelsSim.jl/actions/workflows/CI.yml)
 [![Codecov](https://codecov.io/gh/RePsychLing/MixedModelsSim.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/RePsychLing/MixedModelsSim.jl)
 
 This package provides some utility functions for generating experimental designs, especially those with crossed factors.
@@ -156,9 +155,3 @@ julia> show(nlevels(5))
 ## Acknowledgements
 
 The development of this package was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
-
-[T1-img]: https://github.com/JuliaStats/MixedModels.jl/workflows/Tier1/badge.svg
-[T1-url]: https://github.com/JuliaStats/MixedModels.jl/actions?workflow=Tier1
-
-[T2-img]: https://github.com/JuliaStats/MixedModels.jl/workflows/Tier2/badge.svg
-[T2-url]: https://github.com/JuliaStats/MixedModels.jl/actions?workflow=Tier2
