@@ -8,12 +8,12 @@
         tags: ["*"]
         paths:
           - "**/*.jl"
-          - ".github/workflows/FormatCheck.yml"
+          - ".github/workflows/style.yml"
       pull_request:
         types: [opened, synchronize, reopened, ready_for_review]
         paths:
           - "**/*.jl"
-          - ".github/workflows/FormatCheck.yml"
+          - ".github/workflows/style.yml"
     jobs:
       format-check:
         name: YAS
