@@ -6,15 +6,15 @@ using InteractiveUtils
 
 # ╔═╡ 89495294-10ed-11ec-04a9-db58dba9f3d1
 begin
-	using MixedModels        # run mixed models
-	using MixedModelsSim     # simulation functions for mixed models
-	using DataFrames, Tables # work with data tables
-	using StableRNGs         # random number generator
-	using CSV                # write CSV files
-	using Statistics         # basic math functions
-	using DataFramesMeta     # dplyr-like operations
-	using Gadfly             # plotting package
-	using PlutoUI
+    using MixedModels        # run mixed models
+    using MixedModelsSim     # simulation functions for mixed models
+    using DataFrames, Tables # work with data tables
+    using StableRNGs         # random number generator
+    using CSV                # write CSV files
+    using Statistics         # basic math functions
+    using DataFramesMeta     # dplyr-like operations
+    using Gadfly             # plotting package
+    using PlutoUI
 end
 
 # ╔═╡ c071c03f-6ddb-415e-8445-b4fd8d45abc1
@@ -89,7 +89,7 @@ The chosen LMM for this dataset is defined by the following model formula:
 """
 
 # ╔═╡ 3763460c-046d-46ce-b9ef-4faf1fbd0428
-kb07_f = @formula( rt_trunc ~ 1 + spkr+prec+load + (1|subj) + (1+prec|item) );
+kb07_f = @formula(rt_trunc ~ 1 + spkr + prec + load + (1 | subj) + (1 + prec | item));
 
 # ╔═╡ f05a1f73-503a-4ed7-8879-1da242b2b224
 md"""
@@ -125,7 +125,7 @@ Run nsims iterations:
 """
 
 # ╔═╡ b3e2dea0-bfb0-4d5d-bd9c-8ed0e0272cc0
-kb07_sim = parametricbootstrap(rng, nsims, kb07_m; use_threads = false);
+kb07_sim = parametricbootstrap(rng, nsims, kb07_m; use_threads=false);
 
 # ╔═╡ 1b814e14-136e-45ad-83e9-c783e30dc4b1
 md"""
@@ -151,20 +151,28 @@ Plot some bootstrapped parameter:"""
 
 # ╔═╡ 4598ae9a-8d39-4280-a74a-4d7145d64920
 begin
-	σres = @where(df, :type .== "σ", :group .== "residual").value
-	plot(x = σres, Geom.density, Guide.xlabel("Parametric bootstrap estimates of σ"), Guide.ylabel("Density"))
-	
-	βInt = @where(df, :type .== "β", :names .== "(Intercept)").value
-	plot(x = βInt, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β (Intercept)"), Guide.ylabel("Density"))
-	
-	βSpeaker = @where(df, :type .== "β", :names .== "spkr: old").value
-	plot(x = βSpeaker, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β Speaker"), Guide.ylabel("Density"))
-	
-	βPrecedents = @where(df, :type .== "β", :names .== "prec: maintain").value
-	plot(x = βPrecedents, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β Precedents"), Guide.ylabel("Density"))
-	
-	βLoad = @where(df, :type .== "β", :names .== "load: yes").value
-	plot(x = βLoad, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β Load"), Guide.ylabel("Density"))
+    σres = @where(df, :type .== "σ", :group .== "residual").value
+    plot(; x=σres, Geom.density, Guide.xlabel("Parametric bootstrap estimates of σ"),
+         Guide.ylabel("Density"))
+
+    βInt = @where(df, :type .== "β", :names .== "(Intercept)").value
+    plot(; x=βInt, Geom.density,
+         Guide.xlabel("Parametric bootstrap estimates of β (Intercept)"),
+         Guide.ylabel("Density"))
+
+    βSpeaker = @where(df, :type .== "β", :names .== "spkr: old").value
+    plot(; x=βSpeaker, Geom.density,
+         Guide.xlabel("Parametric bootstrap estimates of β Speaker"),
+         Guide.ylabel("Density"))
+
+    βPrecedents = @where(df, :type .== "β", :names .== "prec: maintain").value
+    plot(; x=βPrecedents, Geom.density,
+         Guide.xlabel("Parametric bootstrap estimates of β Precedents"),
+         Guide.ylabel("Density"))
+
+    βLoad = @where(df, :type .== "β", :names .== "load: yes").value
+    plot(; x=βLoad, Geom.density, Guide.xlabel("Parametric bootstrap estimates of β Load"),
+         Guide.ylabel("Density"))
 end
 
 # ╔═╡ fa91a0f8-675e-4155-9ff4-58090689c397
@@ -194,7 +202,7 @@ You can set the `alpha` argument to change the default value of 0.05 (justify yo
 """
 
 # ╔═╡ 8c06724f-a947-44c2-8541-7aa50c915356
-ptbl = power_table(kb07_sim,0.05)
+ptbl = power_table(kb07_sim, 0.05)
 
 # ╔═╡ fc239c6e-ca35-4df6-81b2-115be160437b
 md"""
@@ -206,19 +214,19 @@ You can also do it manually:
 """
 
 # ╔═╡ 97907ccc-e4b8-43a3-9e5a-ae1da59a203a
-kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"),:]
+kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"), :]
 
 # ╔═╡ a383994a-e4f4-4c9e-9f17-32ec11e32e87
-mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("(Intercept)"),:p] .< 0.05)
+mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("(Intercept)"), :p] .< 0.05)
 
 # ╔═╡ 523c1c21-43d2-469e-b138-3dd5cab1e6b9
-mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("spkr: old"),:p] .< 0.05)
+mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("spkr: old"), :p] .< 0.05)
 
 # ╔═╡ 3419a020-7333-4cb5-981b-84e7fa788280
-mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"),:p] .< 0.05)
+mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"), :p] .< 0.05)
 
 # ╔═╡ 231ce20d-ea0c-4314-a7b0-0e296bc2160b
-mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("load: yes"),:p] .< 0.05)
+mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("load: yes"), :p] .< 0.05)
 
 # ╔═╡ b66ab7be-0547-4535-9d33-cfae62441c61
 md"""
@@ -249,7 +257,7 @@ Specify β:
 new_beta = kb07_m.β
 
 # ╔═╡ bbe93bad-4d41-4300-910a-ec16a660def3
-new_beta[2:4] = kb07_m.β[2:4]/2;
+new_beta[2:4] = kb07_m.β[2:4] / 2;
 
 # ╔═╡ 9510ce0a-6ba7-4903-8e2a-84f6fc69492c
 new_beta
@@ -258,7 +266,7 @@ new_beta
 md"""Run nsims iterations:"""
 
 # ╔═╡ 9fbfff0f-289c-4c92-9ffa-615ad1b69ff2
-kb07_sim_half = parametricbootstrap(rng, nsims, kb07_m; β = new_beta, use_threads = false);
+kb07_sim_half = parametricbootstrap(rng, nsims, kb07_m; β=new_beta, use_threads=false);
 
 # ╔═╡ 7aa2cea2-9136-42ad-bc62-9966aa93b84c
 md"""### Power calculation
@@ -276,16 +284,16 @@ Convert p-values of your fixed-effects parameters to dataframe
 kb07_sim_half_df = DataFrame(kb07_sim_half.coefpvalues);
 
 # ╔═╡ 6b7fdacd-1343-42a2-8e7e-d06bd559765d
-mean(kb07_sim_half_df[kb07_sim_half_df.coefname .== Symbol("(Intercept)"),:p] .< 0.05)
+mean(kb07_sim_half_df[kb07_sim_half_df.coefname .== Symbol("(Intercept)"), :p] .< 0.05)
 
 # ╔═╡ f232988a-c3cf-404f-9f0d-fe0ef591e8bb
-mean(kb07_sim_half_df[kb07_sim_half_df.coefname .== Symbol("spkr: old"),:p] .< 0.05)
+mean(kb07_sim_half_df[kb07_sim_half_df.coefname .== Symbol("spkr: old"), :p] .< 0.05)
 
 # ╔═╡ ed309fad-0058-4069-8e8e-e526b2b36370
-mean(kb07_sim_half_df[kb07_sim_half_df.coefname .== Symbol("prec: maintain"),:p] .< 0.05)
+mean(kb07_sim_half_df[kb07_sim_half_df.coefname .== Symbol("prec: maintain"), :p] .< 0.05)
 
 # ╔═╡ 2fc97a13-abc5-42ff-a1eb-28e24271fae0
-mean(kb07_sim_half_df[kb07_sim_half_df.coefname .== Symbol("load: yes"),:p] .< 0.05)
+mean(kb07_sim_half_df[kb07_sim_half_df.coefname .== Symbol("load: yes"), :p] .< 0.05)
 
 # ╔═╡ 42f4e755-c7b1-46e2-91fd-31a19ccd5685
 md"""## Create a (simple) balanced fully crossed dataset from scratch and analyze power.
@@ -396,7 +404,7 @@ This calculates the covariance factorization which is the theta matrix.
 """
 
 # ╔═╡ ca0b404c-50da-43eb-8bb6-d6037e09ba64
-re_item = create_re(0.536, 0.371; corrmat = re_item_corr)
+re_item = create_re(0.536, 0.371; corrmat=re_item_corr)
 
 # ╔═╡ 2a04994e-bb88-455b-a732-bae9ef1c5422
 md" ![](https://github.com/lschwetlick/MixedModelsSim.jl/blob/new_tutorial/docs/src/ThetaExplanation.png?raw=true)"
@@ -425,7 +433,7 @@ corr_exact = VarCorr(kb07_m).σρ.item.ρ[1]
 re_item_corr_exact = [1.0 corr_exact; corr_exact 1.0]
 
 # ╔═╡ f4929a81-71db-4a78-86f9-22c7ed89f04d
-re_item_exact = create_re(σ_1_exact, σ_2_exact; corrmat = re_item_corr_exact)
+re_item_exact = create_re(σ_1_exact, σ_2_exact; corrmat=re_item_corr_exact)
 
 # ╔═╡ dd8aa406-ef50-4036-9d6f-f499934a84c3
 md"""
@@ -470,7 +478,7 @@ As mentioned above `θ` is the compact form of these covariance matrices:
 """
 
 # ╔═╡ 4d5abbf8-5c04-41e6-a49d-8798c985f953
-kb07_m.θ = vcat( flatlowertri(re_item), flatlowertri(re_subj) )
+kb07_m.θ = vcat(flatlowertri(re_item), flatlowertri(re_subj))
 
 # ╔═╡ b6d4353c-c4bf-421e-abd6-e1c4e427f1fe
 md"""
@@ -527,8 +535,8 @@ Define subject and item number:
 
 # ╔═╡ 2a3411a4-42df-4f6c-bf38-cc7114c5ec87
 begin
-	subj_n_smpl = 10
-	item_n_smpl = 30
+    subj_n_smpl = 10
+    item_n_smpl = 30
 end
 
 # ╔═╡ 48f404de-f654-4021-ba98-edeaabec6e5b
@@ -538,20 +546,20 @@ Simulate data:
 
 # ╔═╡ 2164a837-b0e9-4207-90fd-4db090021963
 dat_smpl = simdat_crossed(subj_n_smpl,
-                     item_n_smpl,
-                     subj_btwn = subj_btwn_smpl,
-                     item_btwn = item_btwn_smpl,
-                     both_win = both_win_smpl);
+                          item_n_smpl;
+                          subj_btwn=subj_btwn_smpl,
+                          item_btwn=item_btwn_smpl,
+                          both_win=both_win_smpl);
 
 # ╔═╡ 873d708d-3f3a-4510-877d-25f73710a35b
 md"Have a look:
 "
 
 # ╔═╡ d5b7f38f-2e72-44b6-9d37-131a14e47658
-first(DataFrame(dat_smpl),8)
+first(DataFrame(dat_smpl), 8)
 
 # ╔═╡ f3465ca6-8838-4f71-9f8a-df727c0f3780
-first(sort(DataFrame(dat_smpl),[:subj,:item]),18)
+first(sort(DataFrame(dat_smpl), [:subj, :item]), 18)
 
 # ╔═╡ 6155d5d8-cf14-4c73-8f41-b0ac5f40244a
 md"""
@@ -562,14 +570,14 @@ Set contrasts:
 
 # ╔═╡ 91120f25-068e-402c-9b13-2eb8d3833b0c
 contrasts_smpl = Dict(:age => HelmertCoding(),
-                 :condition => HelmertCoding());
+                      :condition => HelmertCoding());
 
 # ╔═╡ 0f627b49-72c6-4235-a7f2-bd3bd758704a
 md"""Define formula:
 """
 
 # ╔═╡ 7a9c7cd3-851b-4d2b-be12-cea014e834e5
-f1 = @formula dv ~ 1 + age * condition + (1|item) + (1|subj);
+f1 = @formula dv ~ 1 + age * condition + (1 | item) + (1 | subj);
 
 # ╔═╡ b4f9eff5-3626-47ed-ab8a-8d70f926c831
 md"""Note that we did not include condition as random slopes for item and subject.
@@ -579,7 +587,7 @@ This is mainly to keep the example simple and to keep the parameter `θ` easier 
 Fit the model:"""
 
 # ╔═╡ 5caa14d8-73b8-46d7-b0e1-bc58522f24eb
-m1 = fit(MixedModel, f1, dat_smpl, contrasts=contrasts_smpl)
+m1 = fit(MixedModel, f1, dat_smpl; contrasts=contrasts_smpl)
 
 # ╔═╡ 97af5c8a-ab21-45c1-8fbc-39f749c4d0c7
 md"""
@@ -599,7 +607,7 @@ Specify `β`, `σ`, and `θ`, we just made up this parameter:
 """
 
 # ╔═╡ 72304a3d-6a3a-40a5-933f-4cc88852db11
-new_beta_smpl = [0.0, 0.25, 0.25, 0.]
+new_beta_smpl = [0.0, 0.25, 0.25, 0.0]
 
 # ╔═╡ 99f81384-06c3-45a4-8ccf-305ab7622fe3
 new_sigma_smpl = 2.0
@@ -613,11 +621,11 @@ Run nsims iterations:
 """
 
 # ╔═╡ 08d1781d-dad4-47c8-861f-d745d0f406bf
-sim_smpl = parametricbootstrap(rng_smpl, nsims, m1,
-                        β = new_beta_smpl,
-                        σ = new_sigma_smpl,
-                        θ = new_theta_smpl,
-                        use_threads = false);
+sim_smpl = parametricbootstrap(rng_smpl, nsims, m1;
+                               β=new_beta_smpl,
+                               σ=new_sigma_smpl,
+                               θ=new_theta_smpl,
+                               use_threads=false);
 
 # ╔═╡ 7b7423be-dbbf-4e13-8c98-2eea4df0d02f
 md"""
@@ -625,11 +633,10 @@ md"""
 """
 
 # ╔═╡ 97130e8f-f155-4c4f-a061-696bdbb3c588
-ptbl_smpl= power_table(sim_smpl)
+ptbl_smpl = power_table(sim_smpl)
 
 # ╔═╡ 55096ce7-b7f2-4884-a853-a87316cd171a
 DataFrame(shortestcovint(sim_smpl))
-
 
 # ╔═╡ 7dd1cd44-ee63-4c14-9e82-d2b7c7cef7f8
 md"""
@@ -648,10 +655,10 @@ Convert p-values of your fixed-effects parameters to dataframe
 sim_smpl_df = DataFrame(sim_smpl.coefpvalues);
 
 # ╔═╡ 0cff3191-cdd7-43dc-8761-7ad8bfc64b8c
-[mean(sim_smpl_df[sim_smpl_df.coefname .== Symbol("(Intercept)"),:p] .< 0.05),
- mean(sim_smpl_df[sim_smpl_df.coefname .== Symbol("age: Y"),:p] .< 0.05),
- mean(sim_smpl_df[sim_smpl_df.coefname .== Symbol("condition: B"),:p] .< 0.05),
- mean(sim_smpl_df[sim_smpl_df.coefname .== Symbol("age: Y & condition: B"),:p] .< 0.05)]	
+[mean(sim_smpl_df[sim_smpl_df.coefname .== Symbol("(Intercept)"), :p] .< 0.05),
+ mean(sim_smpl_df[sim_smpl_df.coefname .== Symbol("age: Y"), :p] .< 0.05),
+ mean(sim_smpl_df[sim_smpl_df.coefname .== Symbol("condition: B"), :p] .< 0.05),
+ mean(sim_smpl_df[sim_smpl_df.coefname .== Symbol("age: Y & condition: B"), :p] .< 0.05)]
 
 # ╔═╡ fc75435a-3cce-42ab-9e7d-3b9126d634b6
 md"""
@@ -666,8 +673,8 @@ Define subject and item number:
 
 # ╔═╡ a48b29ef-94da-4917-b1fe-e9101e56f319
 begin
-	subj_n_cmpl = 56
-	item_n_cmpl = 32
+    subj_n_cmpl = 56
+    item_n_cmpl = 32
 end
 
 # ╔═╡ 9dcbb3f7-c2d2-4b05-aa25-5adb4ca72d7f
@@ -677,11 +684,11 @@ Define factors in a dict:
 
 # ╔═╡ 8d13df4c-8468-482b-92f7-62f28a1bf995
 begin
-	subj_btwn_cmpl = nothing
-	item_btwn_cmpl = nothing
-	both_win_cmpl = Dict("spkr" => ["old", "new"],
-	                "prec" => ["maintain", "break"],
-	                "load" => ["yes", "no"]);
+    subj_btwn_cmpl = nothing
+    item_btwn_cmpl = nothing
+    both_win_cmpl = Dict("spkr" => ["old", "new"],
+                         "prec" => ["maintain", "break"],
+                         "load" => ["yes", "no"])
 end
 
 # ╔═╡ d63c51d1-1ef8-4aa9-b0f1-288c387f6d72
@@ -690,22 +697,21 @@ md"### **Try**: Play with `simdat_crossed`.
 
 # ╔═╡ 7bbe248a-6ff5-44f6-9cd4-4fdbd48b81ec
 begin
-	subj_btwn_play = nothing
-	item_btwn_play = nothing
-	both_win_play  = Dict("spkr" => ["old", "new"],
-					 "prec" => ["maintain", "break"],
-	                 "load" => ["yes", "no"]);
-	
-	subj_n_play = 56
-	item_n_play = 32
-	
-	fake_kb07_play = simdat_crossed(subj_n_play, item_n_play,
-	                     subj_btwn = subj_btwn_play,
-	                     item_btwn = item_btwn_play,
-	                     both_win = both_win_play);
-	
-	
-	fake_kb07_df_play = DataFrame(fake_kb07_play);
+    subj_btwn_play = nothing
+    item_btwn_play = nothing
+    both_win_play = Dict("spkr" => ["old", "new"],
+                         "prec" => ["maintain", "break"],
+                         "load" => ["yes", "no"])
+
+    subj_n_play = 56
+    item_n_play = 32
+
+    fake_kb07_play = simdat_crossed(subj_n_play, item_n_play;
+                                    subj_btwn=subj_btwn_play,
+                                    item_btwn=item_btwn_play,
+                                    both_win=both_win_play)
+
+    fake_kb07_df_play = DataFrame(fake_kb07_play)
 end
 
 # ╔═╡ 462c5d9d-e579-4cc4-8f99-af7486ee9714
@@ -714,10 +720,10 @@ Simulate data:
 """
 
 # ╔═╡ f5d79038-e98a-472b-b82c-699ee90112bf
-fake_kb07 = simdat_crossed(subj_n_cmpl, item_n_cmpl,
-                     subj_btwn = subj_btwn_cmpl,
-                     item_btwn = item_btwn_cmpl,
-                     both_win = both_win_cmpl);
+fake_kb07 = simdat_crossed(subj_n_cmpl, item_n_cmpl;
+                           subj_btwn=subj_btwn_cmpl,
+                           item_btwn=item_btwn_cmpl,
+                           both_win=both_win_cmpl);
 
 # ╔═╡ 4ce55c9a-f91b-4724-a3af-349289599d45
 md"""
@@ -733,7 +739,7 @@ Have a look:
 """
 
 # ╔═╡ 410e4de9-a672-4774-b281-562e444299a3
-first(fake_kb07_df,8)
+first(fake_kb07_df, 8)
 
 # ╔═╡ b93bcbd0-3bd1-45fc-b7f8-27319b05b290
 md"""
@@ -752,10 +758,10 @@ In order to select only the relevant rows of the data set we define an index whi
 """
 
 # ╔═╡ d223b588-e380-458c-a546-f552f51fdda5
-len = convert(Int64,(length(fake_kb07)/8));
+len = convert(Int64, (length(fake_kb07) / 8));
 
 # ╔═╡ 7d6ef8df-3230-4b90-8756-1f41b73670d4
-idx_0 = rand(rng, collect(1:8) , len);
+idx_0 = rand(rng, collect(1:8), len);
 
 # ╔═╡ 8a04a59a-5ddd-4783-83ae-d73008673aa1
 md"""
@@ -764,10 +770,10 @@ Then we create an array `A`, of the same length that is populated multiples of t
 
 # ╔═╡ 0d24be79-1d59-4d44-bf08-6fa3826847ac
 begin
-	A_0 = repeat([8], inner=len-1)
-	A_1 = append!( [0], A_0 )
-	A_2 = cumsum(A_1)
-	idx_1 = idx_0 + A_2
+    A_0 = repeat([8]; inner=len - 1)
+    A_1 = append!([0], A_0)
+    A_2 = cumsum(A_1)
+    idx_1 = idx_0 + A_2
 end
 
 # ╔═╡ 7e993ae9-7a84-42f8-98e8-9195e987d942
@@ -776,7 +782,7 @@ Reduce the balanced fully crossed design to the original experimental design:
 """
 
 # ╔═╡ f6ae17ef-3ab3-469f-970b-8aee0e3adfcd
-fake_kb07_df_final= fake_kb07_df_sort[idx_1, :];
+fake_kb07_df_final = fake_kb07_df_sort[idx_1, :];
 
 # ╔═╡ 5916d763-658b-44f6-baea-6cd11898954f
 rename!(fake_kb07_df_final, :dv => :rt_trunc)
@@ -790,7 +796,7 @@ Set contrasts:
 
 # ╔═╡ cbe91c03-352c-42fe-a410-3371e023a2c8
 contrasts_cmpl = Dict(:spkr => HelmertCoding(),
-                 	  :prec => HelmertCoding(),
+                      :prec => HelmertCoding(),
                       :load => HelmertCoding());
 
 # ╔═╡ 35938e63-7b16-40b9-a321-fce1f3f933f7
@@ -799,7 +805,7 @@ Use formula, same as above `kb07_f`
 """
 
 # ╔═╡ 35fe77d9-81bd-4a8e-9b5a-fe5baf28b2f6
-fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df_final, contrasts=contrasts_cmpl)
+fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df_final; contrasts=contrasts_cmpl)
 
 # ╔═╡ a1640dce-dd08-427e-bb9d-7d3ef8495617
 md"""
@@ -817,7 +823,6 @@ kb07_m
 
 # ╔═╡ 69fc8f6b-8862-44d0-aca2-20def7028487
 md"`β`"
-
 
 # ╔═╡ 9ba9c512-ba39-4260-a4f3-1eebc3678afa
 new_beta_cmpl = [2181.85, 67.879, -333.791, 78.5904]; #manual
@@ -849,13 +854,13 @@ md"`θ`"
 re_item_corr_cmpl = [1.0 -0.7; -0.7 1.0];
 
 # ╔═╡ 71ab4138-bb3a-47a3-9d12-9a7004624dea
-re_item_cmpl = create_re(0.536, 0.371; corrmat = re_item_corr_cmpl);
+re_item_cmpl = create_re(0.536, 0.371; corrmat=re_item_corr_cmpl);
 
 # ╔═╡ fd90e01d-9e14-4bac-9e1f-3f2d36cf1507
 re_subj_cmpl = create_re(0.438);
 
 # ╔═╡ fea3d964-4190-4413-aff1-5aa9ae4df0c0
-new_theta_cmpl = vcat( flatlowertri(re_item_cmpl), flatlowertri(re_subj_cmpl) ) #manual
+new_theta_cmpl = vcat(flatlowertri(re_item_cmpl), flatlowertri(re_subj_cmpl)) #manual
 
 # ╔═╡ 845a4983-74ce-4cfa-84d9-ed1f043ce9f1
 new_theta_cmpl_exact = kb07_m.θ; #grab from existing model
@@ -866,11 +871,11 @@ Run nsims iterations:
 """
 
 # ╔═╡ 5ab9112e-328c-44c2-bf1d-527576aedb38
-fake_kb07_sim = parametricbootstrap(rng, nsims, fake_kb07_m,
-                        β = new_beta_cmpl,
-                        σ = new_sigma_cmpl,
-                        θ = new_theta_cmpl,
-                        use_threads = false)
+fake_kb07_sim = parametricbootstrap(rng, nsims, fake_kb07_m;
+                                    β=new_beta_cmpl,
+                                    σ=new_sigma_cmpl,
+                                    θ=new_theta_cmpl,
+                                    use_threads=false)
 
 # ╔═╡ e9e851c1-e74f-4b8a-9a8f-c817a6c751fc
 md"""
@@ -884,10 +889,10 @@ power_table(fake_kb07_sim)
 fake_kb07_sim_df = DataFrame(fake_kb07_sim.coefpvalues);
 
 # ╔═╡ 6cb151cf-2f03-44f2-8a7a-5c8ef0236079
-[mean(fake_kb07_sim_df[fake_kb07_sim_df.coefname .== Symbol("(Intercept)"),:p] .< 0.05),
-mean(fake_kb07_sim_df[fake_kb07_sim_df.coefname .== Symbol("spkr: old"),:p] .< 0.05),
-mean(fake_kb07_sim_df[fake_kb07_sim_df.coefname .== Symbol("prec: maintain"),:p] .< 0.05),
-mean(fake_kb07_sim_df[fake_kb07_sim_df.coefname .== Symbol("load: yes"),:p] .< 0.05)]
+[mean(fake_kb07_sim_df[fake_kb07_sim_df.coefname .== Symbol("(Intercept)"), :p] .< 0.05),
+ mean(fake_kb07_sim_df[fake_kb07_sim_df.coefname .== Symbol("spkr: old"), :p] .< 0.05),
+ mean(fake_kb07_sim_df[fake_kb07_sim_df.coefname .== Symbol("prec: maintain"), :p] .< 0.05),
+ mean(fake_kb07_sim_df[fake_kb07_sim_df.coefname .== Symbol("load: yes"), :p] .< 0.05)]
 
 # ╔═╡ 2bc411ac-e4b8-4e85-9243-4a222935290d
 md"""
@@ -895,10 +900,10 @@ Compare to the powertable from the existing data:
 """
 
 # ╔═╡ 4ccc0b79-7f26-4994-8126-88955460e43a
-[mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("(Intercept)"),:p] .< 0.05),
-mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("spkr: old"),:p] .< 0.05),
-mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"),:p] .< 0.05),
-mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("load: yes"),:p] .< 0.05)]
+[mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("(Intercept)"), :p] .< 0.05),
+ mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("spkr: old"), :p] .< 0.05),
+ mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("prec: maintain"), :p] .< 0.05),
+ mean(kb07_sim_df[kb07_sim_df.coefname .== Symbol("load: yes"), :p] .< 0.05)]
 
 # ╔═╡ ea53f15b-db89-444c-bdde-25747751d505
 md"""
@@ -981,41 +986,40 @@ md"""
 for subj_n in sub_ns
     for item_n in item_ns
 
-    # Make balanced fully crossed data:
-    fake_kb07 = simdat_crossed(subj_n, item_n,
-                     subj_btwn = subj_btwn,
-                     item_btwn = item_btwn,
-                     both_win = both_win);
-    fake_kb07_df = DataFrame(fake_kb07)
+        # Make balanced fully crossed data:
+        fake_kb07 = simdat_crossed(subj_n, item_n;
+                                   subj_btwn=subj_btwn,
+                                   item_btwn=item_btwn,
+                                   both_win=both_win)
+        fake_kb07_df = DataFrame(fake_kb07)
 
-    # Reduce the balanced fully crossed design to the original experimental design:
-    fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
-    len = convert(Int64,(length(fake_kb07)/8))
-    idx = rand(rng, collect(1:8) , len)
-    A = repeat([8], inner=len-1)
-    A = append!( [0], A )
-    A = cumsum(A)
-    idx = idx+A
-    fake_kb07_df= fake_kb07_df[idx, :]
-    rename!(fake_kb07_df, :dv => :rt_trunc)
+        # Reduce the balanced fully crossed design to the original experimental design:
+        fake_kb07_df = sort(fake_kb07_df, [:subj, :item, :load, :prec, :spkr])
+        len = convert(Int64, (length(fake_kb07) / 8))
+        idx = rand(rng, collect(1:8), len)
+        A = repeat([8]; inner=len - 1)
+        A = append!([0], A)
+        A = cumsum(A)
+        idx = idx + A
+        fake_kb07_df = fake_kb07_df[idx, :]
+        rename!(fake_kb07_df, :dv => :rt_trunc)
 
-    # Fit the model:
-    fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df, contrasts=contrasts);
+        # Fit the model:
+        fake_kb07_m = fit(MixedModel, kb07_f, fake_kb07_df; contrasts=contrasts)
 
-    # Run nsims iterations:
-    fake_kb07_sim = parametricbootstrap(rng, nsims, fake_kb07_m,
-                        β = new_beta,
-                        σ = new_sigma,
-                        θ = new_theta,
-                        use_threads = false);
+        # Run nsims iterations:
+        fake_kb07_sim = parametricbootstrap(rng, nsims, fake_kb07_m;
+                                            β=new_beta,
+                                            σ=new_sigma,
+                                            θ=new_theta,
+                                            use_threads=false)
 
-    # Power calculation
-    ptbl = power_table(fake_kb07_sim)
-    ptdf = DataFrame(ptbl)
-    ptdf[!, :item_n] .= item_n
-    ptdf[!, :subj_n] .= subj_n
-    append!(d, ptdf)
-
+        # Power calculation
+        ptbl = power_table(fake_kb07_sim)
+        ptdf = DataFrame(ptbl)
+        ptdf[!, :item_n] .= item_n
+        ptdf[!, :subj_n] .= subj_n
+        append!(d, ptdf)
     end
 end
 
@@ -1034,9 +1038,11 @@ Lastly we plot our results:
 
 # ╔═╡ 9165b8ac-4962-432f-9643-525f441d9615
 begin
-	categorical!(d, :item_n)
-	
-	plot(d, x="subj_n", y="power",xgroup= "coefname",color="item_n", Geom.subplot_grid(Geom.point, Geom.line), Guide.xlabel("Number of subjects by parameter"), Guide.ylabel("Power"))
+    categorical!(d, :item_n)
+
+    plot(d; x="subj_n", y="power", xgroup="coefname", color="item_n",
+         Geom.subplot_grid(Geom.point, Geom.line),
+         Guide.xlabel("Number of subjects by parameter"), Guide.ylabel("Power"))
 end
 
 # ╔═╡ e54b4939-f389-49f0-90c0-1a0b2ff87774
