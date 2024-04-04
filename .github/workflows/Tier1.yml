@@ -31,7 +31,7 @@ jobs:
         with:
           version: ${{ matrix.julia-version }}
       - uses: julia-actions/julia-buildpkg@v0.1
-      - uses: julia-actions/julia-runtest@v0.1
+      - uses: julia-actions/julia-runtest@v1.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: julia-actions/julia-uploadcodecov@v0.1
