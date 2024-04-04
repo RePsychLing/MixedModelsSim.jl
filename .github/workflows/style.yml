@@ -1,48 +1,50 @@
----
-    name: Style-Enforcer
-    on:
-      push:
-        branches:
-          - main
-          - /^release-.*$/
-        tags: ["*"]
-        paths:
-          - "**/*.jl"
-          - ".github/workflows/style.yml"
-      pull_request:
-        types: [opened, synchronize, reopened, ready_for_review]
-        paths:
-          - "**/*.jl"
-          - ".github/workflows/style.yml"
-    jobs:
-      format-check:
-        name: YAS
-        # These permissions are needed to:
-        # - Delete old caches: https://github.com/julia-actions/cache#usage
-        # - Post formatting suggestions: https://github.com/reviewdog/action-suggester#required-permissions
-        permissions:
-          actions: write
-          contents: read
-          pull-requests: write
-        runs-on: ubuntu-latest
-        steps:
-          - uses: actions/checkout@v4
-          - uses: julia-actions/setup-julia@v1
-            with:
-              version: "1"
-          - uses: julia-actions/cache@v1
-          - name: Install JuliaFormatter
-            shell: julia --project=@format --color=yes {0}
-            run: |
-              using Pkg
-              Pkg.add(PackageSpec(; name="JuliaFormatter", version="1"))
-          - name: Check formatting
-            shell: julia --project=@format --color=yes {0}
-            run: |
-              using JuliaFormatter
-              format(".", YASStyle(); verbose=true)
-          - uses: reviewdog/action-suggester@v1
-            if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
-            with:
-              tool_name: JuliaFormatter
-              fail_on_error: true
+name: Style-Enforcer
+concurrency:
+    group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+    cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+on:
+  push:
+    branches:
+      - main
+      - /^release-.*$/
+    tags: ["*"]
+    paths:
+      - "**/*.jl"
+      - ".github/workflows/style.yml"
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "**/*.jl"
+      - ".github/workflows/style.yml"
+jobs:
+  format-check:
+    name: YAS
+    # These permissions are needed to:
+    # - Delete old caches: https://github.com/julia-actions/cache#usage
+    # - Post formatting suggestions: https://github.com/reviewdog/action-suggester#required-permissions
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: "1"
+      - uses: julia-actions/cache@v1
+      - name: Install JuliaFormatter
+        shell: julia --project=@format --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.add(PackageSpec(; name="JuliaFormatter", version="1"))
+      - name: Check formatting
+        shell: julia --project=@format --color=yes {0}
+        run: |
+          using JuliaFormatter
+          format(".", YASStyle(); verbose=true)
+      - uses: reviewdog/action-suggester@v1
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
+        with:
+          tool_name: JuliaFormatter
+          fail_on_error: true
