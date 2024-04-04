@@ -11,19 +11,19 @@ using Tables
 using MixedModels: replicate
 
 export
-    create_re,
-    create_theta,
-    createθ,
-    cyclicshift,
-    factorproduct,
-    flatlowertri,
-    nlevels,
-    nlevstbl,
-    #withinitem,
-    pooled!,
-    power_table,
-    simdat_crossed,
-    update!
+       create_re,
+       create_theta,
+       createθ,
+       cyclicshift,
+       factorproduct,
+       flatlowertri,
+       nlevels,
+       nlevstbl,
+#withinitem,
+       pooled!,
+       power_table,
+       simdat_crossed,
+       update!
 
 export pretty_table, @pt # re-exports
 
