@@ -6,6 +6,7 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://RePsychLing.github.io/MixedModelsSim.jl/dev)
 [![CI](https://github.com/RePsychLing/MixedModelsSim.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/RePsychLing/MixedModelsSim.jl/actions/workflows/CI.yml)
 [![Codecov](https://codecov.io/gh/RePsychLing/MixedModelsSim.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/RePsychLing/MixedModelsSim.jl)
+[![Code Style: YAS](https://img.shields.io/badge/code%20style-yas-1fdcb3.svg)](https://github.com/jrevels/YASGuide)
 
 This package provides some utility functions for generating experimental designs, especially those with crossed factors.
 
