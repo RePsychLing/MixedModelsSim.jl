@@ -216,6 +216,11 @@ The `namedre` can be created using [`create_re`](@ref). The `namedre` are specif
 by the name of the blocking variable, e.g. `subj=create_re(...)`.
 
 !!! warning
+    The model's response must be initialized to a non-constant value before
+    calling this function, otherwise the model update will fail with a 
+    `PosDefException`.
+
+!!! warning
     Setting θ directly as a keyword-argument is deprecated.
 
 !!! note
