@@ -117,10 +117,8 @@ rng = StableRNG(42);
 
 Run nsims iterations:
 ```@example Main
-kb07_sim = parametricbootstrap(rng, nsims, kb07_m; use_threads = false);
+kb07_sim = parametricbootstrap(rng, nsims, kb07_m);
 ```
-
-**Try**: Run the code above with or without `use_threads = true`. Did performance get better or worse? Check out the help information `parametricbootstrap` to see why!
 
 The returned value `kb07_sim` contains the results of the bootstrapping procedure, which we can convert to a dataframe
 
@@ -221,7 +219,7 @@ new_beta[2:4] = kb07_m.β[2:4] / 2
 
 Run simulations:
 ```@example Main
-kb07_sim_half = parametricbootstrap(StableRNG(42), nsims, kb07_m; β = new_beta, use_threads = false);
+kb07_sim_half = parametricbootstrap(StableRNG(42), nsims, kb07_m; β = new_beta);
 ```
 
 ### Power calculation
@@ -485,8 +483,7 @@ Run nsims iterations:
 sim1 = parametricbootstrap(rng, nsims, m1;
                            β = new_beta,
                            σ = new_sigma,
-                           θ = new_theta,
-                           use_threads = false);
+                           θ = new_theta);
 ```
 
 ### Power calculation
@@ -644,8 +641,7 @@ Run nsims iterations:
 fake_kb07_sim = parametricbootstrap(rng, nsims, fake_kb07_m,
                         β = new_beta,
                         σ = new_sigma,
-                        θ = new_theta,
-                        use_threads = false);
+                        θ = new_theta);
 ```
 
 ### Power calculation
@@ -765,8 +761,7 @@ nothing # hide
                                    β = new_beta,
                                    σ = new_sigma,
                                    θ = new_theta,
-                                   use_threads = false,
-                                   hide_progress=true);
+                                   progress=false);
 
     # Power calculation
     local ptbl = power_table(fake_sim)
