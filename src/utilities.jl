@@ -57,7 +57,7 @@ cyclicshift('a':'d', 8)
 ```
 """
 function cyclicshift(v::AbstractVector, nrow)
-    # The return value i used to counterbalance levels of conditions in [`withinitem`](@ref).
+    # The return value is used to counterbalance levels of conditions across rows.
     vlen = length(v)
     return [v[1 + (i + j) % vlen] for i in 0:(nrow - 1), j in 0:(vlen - 1)]
 end
