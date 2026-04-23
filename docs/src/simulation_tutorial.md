@@ -742,7 +742,7 @@ nothing # hide
 ### Run the loop:
 
 ```@example Main
-@showprogress for subj_n in sub_ns, item_n in item_ns
+@showprogress enabled=isinteractive() for subj_n in sub_ns, item_n in item_ns
     # Make balanced fully crossed data:
     fake = simdat_crossed(subj_n, item_n;
                           subj_btwn = subj_btwn,
