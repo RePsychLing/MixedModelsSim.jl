@@ -40,8 +40,8 @@ Here we define how many model simulations we want to do. A large number will giv
 It is useful to set it to a low number for testing, and increase it for your final analysis.
 
 ```@example Main
-# for real power analysis, set this much higher
-nsims = 100
+# for real power analysis, set this much higher (e.g. 1000)
+nsims = 10
 ```
 
 ## Use existing data to simulate new data
@@ -105,6 +105,10 @@ You can use the `parametricbootstrap()` function to run `nsims` iterations of da
 
 Set up a random seed to make the simulation reproducible. You can use your favourite number.
 
+!!! note "Why `StableRNG`?"
+    We use `StableRNG` from the [StableRNGs.jl](https://github.com/JuliaRandom/StableRNGs.jl) package rather than `Random.MersenneTwister`.
+    `StableRNG` guarantees the same sequence of random numbers across Julia versions and platforms, which is important for reproducible simulation results in collaborative or long-running projects.
+
 To use multithreading, you need to set the number of worker threads you want to use.
 In VS Code, open the settings (gear icon in the lower left corner) and search for "thread".
 Set `julia.NumThreads` to the number of threads you want to use (at least 1 less than the total number of processor cores available, so that you can continue watching YouTube while the simulation runs).
@@ -127,7 +131,7 @@ df = DataFrame(kb07_sim.allpars);
 first(df, 12)
 ```
 
-The dataframe `df` has 4500 rows: 9 parameters, each from 500 iterations.
+The dataframe `df` has `nsims * npar` rows, where `npar` is the total number of parameters.
 ```@example Main
 nrow(df)
 ```
@@ -379,8 +383,8 @@ Because of this trick, we need to specify the model along with the random effect
 We can install these parameter in the `parametricbootstrap()`-function or in the model like this:
 
 ```@example Main
-# need the fully qualified name here because Makie also defines update!
-MixedModelsSim.update!(kb07_m, item=re_item, subj=re_subj)
+# MixedModels and Makie both export `update!`, so we use the full module path to disambiguate
+MixedModelsSim.update!(kb07_m; item=re_item, subj=re_subj)
 DisplayAs.Text(ans) # hide
 ```
 
@@ -475,7 +479,11 @@ Specify `β`, `σ`, and `θ`, we just made up this parameter:
 ```@example Main
 new_beta = [0., 0.25, 0.25, 0.]
 new_sigma = 2.0
-new_theta = [1.0, 1.0]
+# create_re with a single argument specifies the random-effect SD relative to the residual SD
+re_subj_simple = create_re(1.0)
+re_item_simple = create_re(1.0)
+# createθ sorts the random effects into the order MixedModels.jl expects for this model
+new_theta = createθ(m1; subj=re_subj_simple, item=re_item_simple)
 ```
 
 Run nsims iterations:
@@ -693,7 +701,7 @@ Define formula:
 ```@example Main
 kb07_f = @formula(rt_trunc ~ 1 + spkr + prec + load + (1 | subj) + (1 + prec | item));
 ```
-a
+
 Specify `β`, `σ`, and `θ`:
 
 ```@example Main
@@ -734,7 +742,7 @@ nothing # hide
 ### Run the loop:
 
 ```@example Main
-@showprogress for subj_n in sub_ns, item_n in item_ns
+@showprogress enabled=isinteractive() for subj_n in sub_ns, item_n in item_ns
     # Make balanced fully crossed data:
     fake = simdat_crossed(subj_n, item_n;
                           subj_btwn = subj_btwn,
@@ -753,8 +761,8 @@ nothing # hide
     fake_df = fake_df[idx, :]
     rename!(fake_df, :dv => :rt_trunc)
 
-    # create the model:
-    fake_m = LinearMixedModel(kb07_f, fake_df, contrasts=contrasts);
+    # LinearMixedModel creates an unfitted model; parametricbootstrap uses the β, σ, θ we supply
+    fake_m = LinearMixedModel(kb07_f, fake_df; contrasts=contrasts);
     local new_theta = createθ(fake_m; item=re_item, subj=re_subj)
     # Run nsims iterations:
     fake_sim = parametricbootstrap(rng, nsims, fake_m,
@@ -792,13 +800,40 @@ function subplot_power(f::Figure, dat, coefname)
     return ax
 end
 
-fig = Figure(; resolution=(1300,300))
+fig = Figure(; size=(1300,300))
 for (idx, cn) in enumerate(sort(unique(d.coefname)))
     fig[1, idx] = subplot_power(fig, d, cn)
 end
 Colorbar(fig[1, end+1]; label="power", vertical=true, colorrange=[0,1], colormap=:viridis)
 fig
 ```
+
+## Troubleshooting
+
+### `PosDefException: matrix is not Hermitian; Cholesky factorization failed`
+
+This error from `create_re()` means the values you provided do not form a valid positive-definite covariance matrix.
+The most common cause is supplying values that are too precise relative to what the data actually support — remember that these parameters are inherently uncertain estimates.
+Round your values to 2–3 significant figures and try again.
+If the error persists, check that your correlation matrix is valid (diagonal entries must be 1.0, off-diagonal entries must be in the range (−1, 1), and the matrix must be positive-definite).
+
+### θ ordering errors in loops
+
+The internal ordering of the θ vector depends on the full model structure, including the number of subjects and items.
+**Always use `createθ(model; name=re, ...)` inside loops** that vary the design — never construct θ by hand or compute it outside the loop and reuse it, as the ordering may differ across iterations.
+
+### `update!` name conflict with Makie
+
+Both `MixedModelsSim` and `Makie` export a function called `update!`.
+If you have `using CairoMakie` (or any Makie backend) in scope alongside `using MixedModelsSim`, calling `update!` will be ambiguous.
+Use the fully-qualified form `MixedModelsSim.update!(model; ...)` to avoid the conflict.
+
+### Model response must be non-constant before calling `update!`
+
+`update!` refits the model after installing new random-effects parameters.
+If the dependent variable column contains only zeros or a constant, the refit will fail with a `PosDefException`.
+This can happen when `simdat_crossed` has just been called and the `dv` column has not yet been populated with meaningful values.
+In that case, either fit the model first with `fit(MixedModel, formula, data)` or pass the parameters directly to `parametricbootstrap()` without calling `update!` beforehand.
 
 ## Acknowledgements
 

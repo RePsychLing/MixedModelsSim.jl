@@ -8,7 +8,7 @@ First, some setup:
 ```@example Main
 using DataFrames
 using MixedModels, MixedModelsSim
-using Random
+using StableRNGs
 ```
 
 ## Assemble the Design
@@ -34,7 +34,7 @@ both_win = Dict(:context => ["matched", "unmatched"])
 and then generate it:
 
 ```@example Main
-rng = MersenneTwister(42)  # specify our random number generator for reproducibility
+rng = StableRNG(42)  # specify our random number generator for reproducibility
 design = simdat_crossed(rng, n_subj, n_item;
                         subj_btwn = subj_btwn,
                         item_btwn = item_btwn,
@@ -169,12 +169,12 @@ In MixedModels.jl, you can specify different parameter values, such as the ones
 ```@example Main
 # typically we would use a lot more simulations
 # but we want to be quick in this example
-sim = parametricbootstrap(MersenneTwister(12321), 20, m0; β=β, σ=σ, θ=θ)
+sim = parametricbootstrap(StableRNG(12321), 20, m0; β=β, σ=σ, θ=θ)
 ```
 
 As mentioned above, the ordering within θ is dependent on the entire design, so if you embed the simulation code in a loop iterating over different numbers of subjects and items, it's probably better to write it as:
 ```julia
-sim = parametricbootstrap(MersenneTwister(12321), 20, m0;
+sim = parametricbootstrap(StableRNG(12321), 20, m0;
                           β=β, σ=σ, θ=createθ(m0; subj=re_subj, item=re_item))
 ```
 
@@ -195,3 +195,5 @@ We can of course convert the row table into a DataFrame:
 ```@example Main
 DataFrame(ptbl)
 ```
+
+For a more thorough walkthrough — including how to adapt effect sizes from pilot data, create designs from scratch, and loop over subject and item counts for power curves — see the [Beginner Friendly Tutorial](@ref "Power Analysis and Simulation Tutorial").
